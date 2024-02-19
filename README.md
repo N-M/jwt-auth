@@ -20,21 +20,61 @@ Middleware does **not** implement OAuth 2.0 authorization server nor does it pro
 For example implementation see [Slim API Skeleton](https://github.com/tuupola/slim-api-skeleton).
 
 ## Breaking Changes
-Because of the way firebase/php-jwt:v6 now works, the way `secrets` and `algorithm` are pass needs to change so the following change will need to be made.
+The default `algorithm` has changed from `['HS256', 'HS512', 'HS384']` to 
+`['RS256']`in most case this will not be a problem unless you are using 
+multiple JWT with different encoding
 
-```php
+The way `secrets` and `algorithm` are pass has to change, It is now required
+a unique key is set match the secret to the algorithm.
+``` php
 $app = new Slim\App;
 
 $app->add(new Tuupola\Middleware\JwtAuthentication([
-    "secret" => [
-        "acme" => "supersecretkeyyoushouldnotcommittogithub",
-        "beta" => "supersecretkeyyoushouldnotcommittogithub",
-    "algorithm" => [
-        "amce" => "HS256",
-        "beta" => "HS384"
-    ]
+    "secret" => ["acme" => "supersecretkeyyoushouldnotcommittogithub"],
+    "algorithm" => ["amce" => "HS256"]
 ]));
 ```
+
+If your application is using multiple algorithms you will need to change
+the way the JWT are created, each token now must include the `kid` in 
+the header which matches the corrispoding algorithm and secret which
+the middleware will use to decode the JWT. if you using 
+`firebase/php-jwt` to do this here's an example.
+```php
+$hs256token = JWT::encode([...], 'tooManySecrets', 'HS256', 'acme');
+$hs512token = JWT::encode([...], 'tooManySecrets', 'HS512', 'beta');
+```
+
+# Upgrade
+1. Switch over the package by using the following commands, for now the 
+namespace is exactly the same.
+```bash
+composer remove tuupola/slim-jwt-auth
+composer require jimtools/jwt-auth
+```
+
+2. Update the `JwtAuthentication` config to have keys for the `secret` and 
+`algorithm` to have unique index.
+
+Before
+```php
+$app->add(new Tuupola\Middleware\JwtAuthentication([
+    "secret" => "supersecretkeyyoushouldnotcommittogithub",
+    "algorithm" => ["HS256"]
+]));
+```
+
+After
+```php
+$app->add(new Tuupola\Middleware\JwtAuthentication([
+    "secret" => ["acme" => "supersecretkeyyoushouldnotcommittogithub"],
+    "algorithm" => ["acme" => "HS256"],
+]));
+```
+
+3. (Maybe) If your using multiple encryption algorithms you will need to add the `kid`
+to the JWT header.
+[firebase JWT Docs](https://github.com/firebase/php-jwt#example-with-multiple-keys)
 
 ## Install
 
