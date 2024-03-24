@@ -70,8 +70,7 @@ Switch over the package by using the following commands, for now, the namespace
 is the same.
 
 ```bash
-composer remove tuupola/slim-jwt-auth
-composer require jimtools/jwt-auth
+composer require -W jimtools/jwt-auth
 ```
 
 Update the `JwtAuthentication` config to have keys for the `secret` and
