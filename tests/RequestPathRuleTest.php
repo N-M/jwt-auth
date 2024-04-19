@@ -35,7 +35,7 @@ namespace Tuupola\Middleware\JwtAuthentication;
 use PHPUnit\Framework\TestCase;
 use Tuupola\Http\Factory\ServerRequestFactory;
 
-class RequestPathTest extends TestCase
+class RequestPathRuleTest extends TestCase
 {
     public function testShouldAcceptArrayAndStringAsPath(): void
     {
