@@ -1,0 +1,6 @@
+---
+path:
+  - src
+  - tests
+exclude:
+  - vendor
