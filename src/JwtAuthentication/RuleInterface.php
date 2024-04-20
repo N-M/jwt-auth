@@ -29,6 +29,7 @@ SOFTWARE.
 /**
  * @see       https://github.com/tuupola/slim-jwt-auth
  * @see       https://appelsiini.net/projects/slim-jwt-auth
+ *
  * @license   https://www.opensource.org/licenses/mit-license.php
  */
 

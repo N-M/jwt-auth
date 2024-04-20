@@ -26,6 +26,7 @@ SOFTWARE.
 
 /**
  * @see       https://github.com/tuupola/slim-jwt-auth
+ *
  * @license   https://www.opensource.org/licenses/mit-license.php
  */
 
@@ -33,14 +34,18 @@ namespace Tuupola\Middleware;
 
 use Psr\Http\Message\ResponseInterface;
 
-class TestAfterHandler
+/**
+ * @internal
+ */
+final class TestAfterHandler
 {
     public function __invoke(
         ResponseInterface $response,
         array $arguments
     ) {
         $response->getBody()->write(self::class);
-        return $response->withHeader("X-Brawndo", "plants crave");
+
+        return $response->withHeader('X-Brawndo', 'plants crave');
     }
 
     public static function after(
@@ -48,6 +53,7 @@ class TestAfterHandler
         array $arguments
     ) {
         $response->getBody()->write(self::class);
-        return $response->withHeader("X-Water", "like from toilet?");
+
+        return $response->withHeader('X-Water', 'like from toilet?');
     }
 }

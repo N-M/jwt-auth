@@ -26,6 +26,7 @@ SOFTWARE.
 
 /**
  * @see       https://github.com/tuupola/slim-jwt-auth
+ *
  * @license   https://www.opensource.org/licenses/mit-license.php
  */
 
@@ -33,19 +34,22 @@ namespace Tuupola\Middleware;
 
 use Psr\Http\Message\ServerRequestInterface;
 
-class TestBeforeHandler
+/**
+ * @internal
+ */
+final class TestBeforeHandler
 {
     public function __invoke(
         ServerRequestInterface $request,
         array $arguments
     ) {
-        return $request->withAttribute("test", "invoke");
+        return $request->withAttribute('test', 'invoke');
     }
 
     public static function before(
         ServerRequestInterface $request,
         array $arguments
     ) {
-        return $request->withAttribute("test", "function");
+        return $request->withAttribute('test', 'function');
     }
 }
