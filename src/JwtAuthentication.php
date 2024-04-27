@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Tuupola\Middleware;
 
-use ArrayAccess;
 use Closure;
 use DomainException;
 use Exception;
@@ -24,14 +23,8 @@ use Tuupola\Middleware\JwtAuthentication\RequestMethodRule;
 use Tuupola\Middleware\JwtAuthentication\RequestPathRule;
 use Tuupola\Middleware\JwtAuthentication\RuleInterface;
 
-use function array_fill_keys;
-use function array_keys;
-use function call_user_func;
-use function count;
 use function in_array;
-use function is_array;
 use function is_callable;
-use function is_string;
 
 final class JwtAuthentication implements MiddlewareInterface
 {
@@ -164,8 +157,6 @@ final class JwtAuthentication implements MiddlewareInterface
     public function withRules(array $rules): self
     {
         $new = clone $this;
-        // Clear the stack
-        $new->rules = null;
         $new->rules = new SplStack();
         // Add the rules
         foreach ($rules as $callable) {
@@ -287,100 +278,6 @@ final class JwtAuthentication implements MiddlewareInterface
     }
 
     /**
-     * Hydrate options from given array.
-     *
-     * @param mixed[] $data
-     */
-    private function hydrate(array $data = []): void
-    {
-        $data['algorithm'] = $data['algorithm'] ?? $this->options['algorithm'];
-        if ((is_array($data['secret']) || $data['secret'] instanceof ArrayAccess)
-            && is_array($data['algorithm'])
-            && count($data['algorithm']) === 1
-            && count((array) $data['secret']) > count($data['algorithm'])
-        ) {
-            $secretIndex = array_keys((array) $data['secret']);
-            $data['algorithm'] = array_fill_keys($secretIndex, $data['algorithm'][0]);
-        }
-
-        foreach ($data as $key => $value) {
-            // https://github.com/facebook/hhvm/issues/6368
-            $key = str_replace('.', ' ', $key);
-            $method = lcfirst(ucwords($key));
-            $method = str_replace(' ', '', $method);
-            if (method_exists($this, $method)) {
-                // Try to use setter
-                // @phpstan-ignore-next-line
-                call_user_func([$this, $method], $value);
-            } else {
-                // Or fallback to setting option directly
-                $this->options[$key] = $value;
-            }
-        }
-    }
-
-    /**
-     * Set path where middleware should bind to.
-     *
-     * @param string|string[] $path
-     */
-    private function path($path): void
-    {
-        $this->options['path'] = (array) $path;
-    }
-
-    /**
-     * Set path which middleware ignores.
-     *
-     * @param string|string[] $ignore
-     */
-    private function ignore($ignore): void
-    {
-        $this->options['ignore'] = (array) $ignore;
-    }
-
-    /**
-     * Set the cookie name where to search the token from.
-     */
-    private function cookie(string $cookie): void
-    {
-        $this->options['cookie'] = $cookie;
-    }
-
-    /**
-     * Set the secure flag.
-     */
-    private function secure(bool $secure): void
-    {
-        $this->options['secure'] = $secure;
-    }
-
-    /**
-     * Set hosts where secure rule is relaxed.
-     *
-     * @param string[] $relaxed
-     */
-    private function relaxed(array $relaxed): void
-    {
-        $this->options['relaxed'] = $relaxed;
-    }
-
-    /**
-     * Set the secret key.
-     *
-     * @param string|string[] $secret
-     */
-    private function secret($secret): void
-    {
-        if (false === is_array($secret) && false === is_string($secret) && !$secret instanceof ArrayAccess) {
-            throw new InvalidArgumentException(
-                'Secret must be either a string or an array of "kid" => "secret" pairs'
-            );
-        }
-        $this->options['secret'] = $secret;
-    }
-
-    /**
      * Set the error handler.
      */
     private function error(callable $error): void
@@ -426,44 +323,5 @@ final class JwtAuthentication implements MiddlewareInterface
         } else {
             $this->options->after = $after;
         }
-    }
-
-    /**
-     * Set the rules.
-     *
-     * @param RuleInterface[] $rules
-     */
-    private function rules(array $rules): void
-    {
-        foreach ($rules as $callable) {
-            $this->rules->push($callable);
-        }
-    }
-
-    /**
-     * @return array<string,Key>
-     */
-    private function createKeysFromAlgorithms(): array
-    {
-        if (!isset($this->options['secret'])) {
-            throw new InvalidArgumentException(
-                'Secret must be either a string or an array of "kid" => "secret" pairs'
-            );
-        }
-
-        $keyObjects = [];
-        foreach ($this->options['algorithm'] as $kid => $algorithm) {
-            $keyId = !is_numeric($kid) ? $kid : $algorithm;
-
-            $secret = $this->options['secret'];
-
-            if (is_array($secret) || $secret instanceof ArrayAccess) {
-                $secret = $this->options['secret'][$kid];
-            }
-
-            $keyObjects[$keyId] = new Key($secret, $algorithm);
-        }
-
-        return $keyObjects;
     }
 }
