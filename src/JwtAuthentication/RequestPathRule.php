@@ -12,14 +12,12 @@ use Psr\Http\Message\ServerRequestInterface;
 final class RequestPathRule implements RuleInterface
 {
     /**
-     * @param array<string> $path
      * @param array<string> $ignore
      */
     public function __construct(
         private readonly array $paths = ['/'],
         private readonly array $ignore = [],
-    ) {
-    }
+    ) {}
 
     public function __invoke(ServerRequestInterface $request): bool
     {

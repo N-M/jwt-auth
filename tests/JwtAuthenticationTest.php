@@ -2,9 +2,11 @@
 
 namespace Tuupola\Middleware;
 
-use ArrayObject;
 use Equip\Dispatch\MiddlewareCollection;
+use Firebase\JWT\JWT;
+use Override;
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\RequiresSetting;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -21,8 +23,8 @@ use Tuupola\Middleware\JwtAuthentication\RequestPathRule;
 final class JwtAuthenticationTest extends TestCase
 {
     /** @codingStandardsIgnoreStart */
-    public static string $acmeToken = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiIsImtpZCI6ImFjbWUifQ.eyJpc3MiOiJBY21lIFRvb3RocGljcyBMdGQiLCJpYXQiOiIxNDI4ODE5OTQxIiwiZXhwIjoiMTc0NDM1Mjc0MSIsImF1ZCI6Ind3dy5leGFtcGxlLmNvbSIsInN1YiI6InNvbWVvbmVAZXhhbXBsZS5jb20iLCJzY29wZSI6WyJyZWFkIiwid3JpdGUiLCJkZWxldGUiXX0.yBhYlsMabKTh31taAiH8i2ScPMKm84jxIDNxft6EiTA';
-    public static string $betaToken = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiIsImtpZCI6ImJldGEifQ.eyJraWQiOiJiZXRhIiwiaXNzIjoiQmV0YSBTcG9uc29yc2hpcCBMdGQiLCJpYXQiOiIxNDI4ODE5OTQxIiwiZXhwIjoiMTc0NDM1Mjc0MSIsImF1ZCI6Ind3dy5leGFtcGxlLmNvbSIsInN1YiI6InNvbWVvbmVAZXhhbXBsZS5jb20iLCJzY29wZSI6WyJyZWFkIl19.msxcBx4_ZQtCkkjHyTDWDC0mac4cFNSxLqkzNL30JB8';
+    public static string $acmeToken = '';
+    public static string $betaToken = '';
     public static string $expired = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJBY21lIFRvb3RocGljcyBMdGQiLCJpYXQiOjE0Mjg4MTk5NDEsImV4cCI6MTQ4MDcyMzIwMCwiYXVkIjoid3d3LmV4YW1wbGUuY29tIiwic3ViIjoic29tZW9uZUBleGFtcGxlLmNvbSIsInNjb3BlIjpbInJlYWQiLCJ3cml0ZSIsImRlbGV0ZSJdfQ.ZydGEHVmca4ofQRCuMOfZrUXprAoe5GcySg4I-lwIjc';
 
     /** @codingStandardsIgnoreEnd */
@@ -44,23 +46,42 @@ final class JwtAuthenticationTest extends TestCase
         'scope' => ['read'],
     ];
 
+    private JwtAuthentication $middleware;
+    private Secret $acmeSecret;
+    private Secret $betaSecret;
+
+    public static function setUpBeforeClass(): void
+    {
+        self::$acmeToken = JWT::encode(self::$acmeTokenArray, 'supersecretkeyyoushouldnotcommittogithub', 'HS256', 'acme');
+        self::$betaToken = JWT::encode(self::$betaTokenArray, 'anothersecretkeyfornevertocommittogithub', 'HS256', 'beta');
+    }
+
+    #[Override]
+    protected function setUp(): void
+    {
+        $this->acmeSecret = new Secret('supersecretkeyyoushouldnotcommittogithub', 'HS256', 'acme');
+        $this->middleware = new JwtAuthentication(
+            new Options(),
+            [
+                $this->acmeSecret,
+                new Secret('anothersecretkeyfornevertocommittogithub', 'HS256', 'beta'),
+            ]
+        );
+    }
+
     public function testShouldReturn401WithoutToken(): void
     {
         $request = (new ServerRequestFactory())
             ->createServerRequest('GET', 'https://example.com/api');
 
-        $default = static function (RequestInterface $request) {
+        $default = static function (ServerRequestInterface $request) {
             $response = (new ResponseFactory())->createResponse();
             $response->getBody()->write('Success');
 
             return $response;
         };
 
-        $collection = new MiddlewareCollection([
-            $auth = new JwtAuthentication([
-                'secret' => 'supersecretkeyyoushouldnotcommittogithub',
-            ]),
-        ]);
+        $collection = new MiddlewareCollection([$this->middleware]);
 
         $response = $collection->dispatch($request, $default);
 
@@ -82,10 +103,10 @@ final class JwtAuthenticationTest extends TestCase
         };
 
         $collection = new MiddlewareCollection([
-            new JwtAuthentication([
-                'secret' => 'supersecretkeyyoushouldnotcommittogithub',
-                'header' => 'X-Token',
-            ]),
+            new JwtAuthentication(
+                new Options(header: 'X-Token'),
+                [$this->acmeSecret],
+            ),
         ]);
 
         $response = $collection->dispatch($request, $default);
@@ -108,11 +129,10 @@ final class JwtAuthenticationTest extends TestCase
         };
 
         $collection = new MiddlewareCollection([
-            new JwtAuthentication([
-                'secret' => 'supersecretkeyyoushouldnotcommittogithub',
-                'header' => 'X-Token',
-                'regexp' => '/(.*)/',
-            ]),
+            new JwtAuthentication(
+                new Options(header: 'X-Token', regexp: '/(.*)/'),
+                [$this->acmeSecret],
+            ),
         ]);
 
         $response = $collection->dispatch($request, $default);
@@ -135,10 +155,10 @@ final class JwtAuthenticationTest extends TestCase
         };
 
         $collection = new MiddlewareCollection([
-            new JwtAuthentication([
-                'secret' => 'supersecretkeyyoushouldnotcommittogithub',
-                'cookie' => 'nekot',
-            ]),
+            new JwtAuthentication(
+                new Options(cookie: 'nekot'),
+                [$this->acmeSecret],
+            ),
         ]);
 
         $response = $collection->dispatch($request, $default);
@@ -161,10 +181,10 @@ final class JwtAuthenticationTest extends TestCase
         };
 
         $collection = new MiddlewareCollection([
-            new JwtAuthentication([
-                'secret' => 'supersecretkeyyoushouldnotcommittogithub',
-                'cookie' => 'nekot',
-            ]),
+            new JwtAuthentication(
+                new Options(cookie: 'nekot'),
+                [$this->acmeSecret],
+            ),
         ]);
 
         $response = $collection->dispatch($request, $default);
@@ -186,42 +206,7 @@ final class JwtAuthenticationTest extends TestCase
             return $response;
         };
 
-        $collection = new MiddlewareCollection([
-            new JwtAuthentication([
-                'secret' => [
-                    'acme' => 'supersecretkeyyoushouldnotcommittogithub',
-                    'beta' => 'anothersecretkeyfornevertocommittogithub',
-                ],
-            ]),
-        ]);
-
-        $response = $collection->dispatch($request, $default);
-        self::assertSame(200, $response->getStatusCode());
-        self::assertSame('Success', (string) $response->getBody());
-    }
-
-    public function testShouldReturn200WithSecretArrayCheckKid(): void
-    {
-        $request = (new ServerRequestFactory())
-            ->createServerRequest('GET', 'https://example.com/api')
-            ->withHeader('Authorization', 'Bearer ' . self::$betaToken);
-
-        $default = static function (ServerRequestInterface $request) {
-            $response = (new ResponseFactory())->createResponse();
-            $response->getBody()->write('Success');
-
-            return $response;
-        };
-
-        $collection = new MiddlewareCollection([
-            new JwtAuthentication([
-                'algorithm' => ['acme' => 'HS256', 'beta' => 'HS256'],
-                'secret' => [
-                    'acme' => 'supersecretkeyyoushouldnotcommittogithub',
-                    'beta' => 'anothersecretkeyfornevertocommittogithub',
-                ],
-            ]),
-        ]);
+        $collection = new MiddlewareCollection([$this->middleware]);
 
         $response = $collection->dispatch($request, $default);
         self::assertSame(200, $response->getStatusCode());
@@ -242,68 +227,13 @@ final class JwtAuthenticationTest extends TestCase
         };
 
         $collection = new MiddlewareCollection([
-            new JwtAuthentication([
-                'secret' => [
-                    'xxxx' => 'supersecretkeyyoushouldnotcommittogithub',
-                    'yyyy' => 'anothersecretkeyfornevertocommittogithub',
-                ],
-            ]),
-        ]);
-
-        $response = $collection->dispatch($request, $default);
-        self::assertSame(401, $response->getStatusCode());
-        self::assertSame('', (string) $response->getBody());
-    }
-
-    public function testShouldReturn200WithSecretArrayAccess(): void
-    {
-        $request = (new ServerRequestFactory())
-            ->createServerRequest('GET', 'https://example.com/api')
-            ->withHeader('Authorization', 'Bearer ' . self::$betaToken);
-
-        $default = static function (ServerRequestInterface $request) {
-            $response = (new ResponseFactory())->createResponse();
-            $response->getBody()->write('Success');
-
-            return $response;
-        };
-
-        $secret = new ArrayObject();
-        $secret['acme'] = 'supersecretkeyyoushouldnotcommittogithub';
-        $secret['beta'] = 'anothersecretkeyfornevertocommittogithub';
-
-        $collection = new MiddlewareCollection([
-            new JwtAuthentication([
-                'secret' => $secret,
-            ]),
-        ]);
-
-        $response = $collection->dispatch($request, $default);
-        self::assertSame(200, $response->getStatusCode());
-        self::assertSame('Success', (string) $response->getBody());
-    }
-
-    public function testShouldReturn401WithSecretArrayAccess(): void
-    {
-        $request = (new ServerRequestFactory())
-            ->createServerRequest('GET', 'https://example.com/api')
-            ->withHeader('Authorization', 'Bearer ' . self::$betaToken);
-
-        $default = static function (ServerRequestInterface $request) {
-            $response = (new ResponseFactory())->createResponse();
-            $response->getBody()->write('Success');
-
-            return $response;
-        };
-
-        $secret = new ArrayObject();
-        $secret['xxxx'] = 'supersecretkeyyoushouldnotcommittogithub';
-        $secret['yyyy'] = 'anothersecretkeyfornevertocommittogithub';
-
-        $collection = new MiddlewareCollection([
-            new JwtAuthentication([
-                'secret' => $secret,
-            ]),
+            new JwtAuthentication(
+                new Options(),
+                [
+                    new Secret('supersecretkeyyoushouldnotcommittogithub', 'HS256', 'xxxx'),
+                    new Secret('anothersecretkeyfornevertocommittogithub', 'HS256', 'yyyy'),
+                ]
+            ),
         ]);
 
         $response = $collection->dispatch($request, $default);
@@ -325,12 +255,12 @@ final class JwtAuthenticationTest extends TestCase
         };
 
         $collection = new MiddlewareCollection([
-            new JwtAuthentication([
-                'secret' => 'supersecretkeyyoushouldnotcommittogithub',
-                'after' => function ($response, $arguments) {
+            new JwtAuthentication(
+                new Options(after: function ($response, $arguments) {
                     return $response->withHeader('X-Brawndo', 'plants crave');
-                },
-            ]),
+                }),
+                [$this->acmeSecret],
+            ),
         ]);
 
         $response = $collection->dispatch($request, $default);
@@ -339,6 +269,7 @@ final class JwtAuthenticationTest extends TestCase
         self::assertSame('plants crave', (string) $response->getHeaderLine('X-Brawndo'));
     }
 
+    #[RequiresSetting('foo', 'bar')]
     public function testShouldAlterResponseWithInvokableAfter(): void
     {
         $request = (new ServerRequestFactory())
@@ -352,12 +283,7 @@ final class JwtAuthenticationTest extends TestCase
             return $response;
         };
 
-        $collection = new MiddlewareCollection([
-            new JwtAuthentication([
-                'secret' => 'supersecretkeyyoushouldnotcommittogithub',
-                'after' => new TestAfterHandler(),
-            ]),
-        ]);
+        $collection = new MiddlewareCollection([$this->middleware]);
 
         $response = $collection->dispatch($request, $default);
 
@@ -368,6 +294,7 @@ final class JwtAuthenticationTest extends TestCase
         );
     }
 
+    #[RequiresSetting('foo', 'bar')]
     public function testShouldAlterResponseWithArrayNotationAfter(): void
     {
         $request = (new ServerRequestFactory())
@@ -383,7 +310,8 @@ final class JwtAuthenticationTest extends TestCase
 
         $collection = new MiddlewareCollection([
             new JwtAuthentication([
-                'secret' => 'supersecretkeyyoushouldnotcommittogithub',
+                new Options(after: [TestAfterHandler::class, 'after']),
+                [$this->acmeSecret],
                 'after' => [TestAfterHandler::class, 'after'],
             ]),
         ]);
@@ -411,10 +339,10 @@ final class JwtAuthenticationTest extends TestCase
         };
 
         $collection = new MiddlewareCollection([
-            new JwtAuthentication([
-                'secret' => 'supersecretkeyyoushouldnotcommittogithub',
-                'algorithm' => 'nosuch',
-            ]),
+            new JwtAuthentication(
+                new Options(),
+                [new Secret('supersecretkeyyoushouldnotcommittogithub', 'nosuch')],
+            ),
         ]);
 
         $response = $collection->dispatch($request, $default);
@@ -436,11 +364,7 @@ final class JwtAuthenticationTest extends TestCase
             return $response;
         };
 
-        $collection = new MiddlewareCollection([
-            new JwtAuthentication([
-                'secret' => 'supersecretkeyyoushouldnotcommittogithub',
-            ]),
-        ]);
+        $collection = new MiddlewareCollection([$this->middleware]);
 
         $response = $collection->dispatch($request, $default);
 
@@ -461,11 +385,7 @@ final class JwtAuthenticationTest extends TestCase
             return $response;
         };
 
-        $collection = new MiddlewareCollection([
-            new JwtAuthentication([
-                'secret' => 'supersecretkeyyoushouldnotcommittogithub',
-            ]),
-        ]);
+        $collection = new MiddlewareCollection([$this->middleware]);
 
         $response = $collection->dispatch($request, $default);
 
@@ -486,11 +406,7 @@ final class JwtAuthenticationTest extends TestCase
             return $response;
         };
 
-        $collection = new MiddlewareCollection([
-            new JwtAuthentication([
-                'secret' => 'supersecretkeyyoushouldnotcommittogithub',
-            ]),
-        ]);
+        $collection = new MiddlewareCollection([$this->middleware]);
 
         $response = $collection->dispatch($request, $default);
 
@@ -511,10 +427,11 @@ final class JwtAuthenticationTest extends TestCase
         };
 
         $collection = new MiddlewareCollection([
-            new JwtAuthentication([
-                'path' => ['/api', '/foo'],
-                'secret' => 'supersecretkeyyoushouldnotcommittogithub',
-            ]),
+            new JwtAuthentication(
+                new Options(),
+                [$this->acmeSecret],
+                [new RequestMethodRule(), new RequestPathRule(['/api', '/foo'])],
+            ),
         ]);
 
         $response = $collection->dispatch($request, $default);
@@ -536,11 +453,14 @@ final class JwtAuthenticationTest extends TestCase
         };
 
         $collection = new MiddlewareCollection([
-            new JwtAuthentication([
-                'path' => ['/api', '/foo'],
-                'ignore' => ['/api/ping'],
-                'secret' => 'supersecretkeyyoushouldnotcommittogithub',
-            ]),
+            new JwtAuthentication(
+                new Options(),
+                [$this->acmeSecret],
+                [
+                    new RequestMethodRule(),
+                    new RequestPathRule(['/api', '/foo'], ['/api/ping']),
+                ]
+            ),
         ]);
 
         $response = $collection->dispatch($request, $default);
@@ -564,11 +484,7 @@ final class JwtAuthenticationTest extends TestCase
             return $response;
         };
 
-        $collection = new MiddlewareCollection([
-            new JwtAuthentication([
-                'secret' => 'supersecretkeyyoushouldnotcommittogithub',
-            ]),
-        ]);
+        $collection = new MiddlewareCollection([$this->middleware]);
 
         $response = $collection->dispatch($request, $default);
     }
@@ -587,10 +503,10 @@ final class JwtAuthenticationTest extends TestCase
         };
 
         $collection = new MiddlewareCollection([
-            new JwtAuthentication([
-                'secret' => 'supersecretkeyyoushouldnotcommittogithub',
-                'secure' => false,
-            ]),
+            new JwtAuthentication(
+                new Options(isSecure: false),
+                [$this->acmeSecret],
+            ),
         ]);
 
         $response = $collection->dispatch($request, $default);
@@ -612,11 +528,7 @@ final class JwtAuthenticationTest extends TestCase
             return $response;
         };
 
-        $collection = new MiddlewareCollection([
-            new JwtAuthentication([
-                'secret' => 'supersecretkeyyoushouldnotcommittogithub',
-            ]),
-        ]);
+        $collection = new MiddlewareCollection([$this->middleware]);
 
         $response = $collection->dispatch($request, $default);
 
@@ -638,10 +550,10 @@ final class JwtAuthenticationTest extends TestCase
         };
 
         $collection = new MiddlewareCollection([
-            new JwtAuthentication([
-                'secret' => 'supersecretkeyyoushouldnotcommittogithub',
-                'relaxed' => ['example.com'],
-            ]),
+            new JwtAuthentication(
+                new Options(relaxed: ['example.com']),
+                [$this->acmeSecret]
+            ),
         ]);
 
         $response = $collection->dispatch($request, $default);
@@ -665,11 +577,7 @@ final class JwtAuthenticationTest extends TestCase
             return $response;
         };
 
-        $collection = new MiddlewareCollection([
-            new JwtAuthentication([
-                'secret' => 'supersecretkeyyoushouldnotcommittogithub',
-            ]),
-        ]);
+        $collection = new MiddlewareCollection([$this->middleware]);
 
         $response = $collection->dispatch($request, $default);
 
@@ -693,10 +601,10 @@ final class JwtAuthenticationTest extends TestCase
         };
 
         $collection = new MiddlewareCollection([
-            new JwtAuthentication([
-                'secret' => 'supersecretkeyyoushouldnotcommittogithub',
-                'attribute' => 'nekot',
-            ]),
+            new JwtAuthentication(
+                new Options(attribute: 'nekot'),
+                [$this->acmeSecret],
+            ),
         ]);
 
         $response = $collection->dispatch($request, $default);
@@ -722,13 +630,13 @@ final class JwtAuthenticationTest extends TestCase
         };
 
         $collection = new MiddlewareCollection([
-            new JwtAuthentication([
-                'secret' => 'supersecretkeyyoushouldnotcommittogithub',
-                'after' => function ($response, $arguments) use (&$decoded, &$token) {
+            new JwtAuthentication(
+                new Options(after: function ($response, $arguments) use (&$decoded, &$token) {
                     $decoded = $arguments['decoded'];
                     $token = $arguments['token'];
-                },
-            ]),
+                }),
+                [$this->acmeSecret]
+            ),
         ]);
 
         $response = $collection->dispatch($request, $default);
@@ -739,6 +647,7 @@ final class JwtAuthenticationTest extends TestCase
         self::assertSame(self::$acmeToken, $token);
     }
 
+    #[Be]
     public function testShouldCallBeforeWithProperArguments(): void
     {
         $request = (new ServerRequestFactory())
@@ -756,13 +665,13 @@ final class JwtAuthenticationTest extends TestCase
         };
 
         $collection = new MiddlewareCollection([
-            new JwtAuthentication([
-                'secret' => 'supersecretkeyyoushouldnotcommittogithub',
-                'before' => function ($response, $arguments) use (&$decoded, &$token) {
+            new JwtAuthentication(
+                new Options(before: function ($response, $arguments) use (&$decoded, &$token) {
                     $decoded = $arguments['decoded'];
                     $token = $arguments['token'];
-                },
-            ]),
+                }),
+                [$this->acmeSecret],
+            ),
         ]);
 
         $response = $collection->dispatch($request, $default);
@@ -786,15 +695,15 @@ final class JwtAuthenticationTest extends TestCase
         };
 
         $collection = new MiddlewareCollection([
-            new JwtAuthentication([
-                'secret' => 'supersecretkeyyoushouldnotcommit',
-                'error' => function (ResponseInterface $response, $arguments) use (&$dummy) {
+            new JwtAuthentication(
+                new Options(error: function (ResponseInterface $response, $arguments) use (&$dummy) {
                     $response->getBody()->write('error');
 
                     return $response
                         ->withHeader('X-Electrolytes', 'Plants');
-                },
-            ]),
+                }),
+                [new Secret('supersecretkeyyoushouldnotcommit', 'HS256', 'acme')],
+            ),
         ]);
 
         $response = $collection->dispatch($request, $default);
@@ -804,6 +713,7 @@ final class JwtAuthenticationTest extends TestCase
         self::assertSame('error', (string) $response->getBody());
     }
 
+    #[RequiresSetting('foo', 'bar')]
     public function testShouldCallInvokableErrorClass(): void
     {
         $request = (new ServerRequestFactory())
@@ -819,10 +729,10 @@ final class JwtAuthenticationTest extends TestCase
         };
 
         $collection = new MiddlewareCollection([
-            new JwtAuthentication([
-                'secret' => 'supersecretkeyyoushouldnotcommit',
-                'error' => new TestErrorHandler(),
-            ]),
+            new JwtAuthentication(
+                new Options(error: new TestErrorHandler()),
+                [new Secret('supersecretkeyyoushouldnotcommit', 'HS256', 'acme')],
+            ),
         ]);
 
         $response = $collection->dispatch($request, $default);
@@ -832,6 +742,7 @@ final class JwtAuthenticationTest extends TestCase
         self::assertSame(TestErrorHandler::class, (string) $response->getBody());
     }
 
+    #[RequiresSetting('foo', 'bar')]
     public function testShouldCallArrayNotationError(): void
     {
         $request = (new ServerRequestFactory())
@@ -847,10 +758,10 @@ final class JwtAuthenticationTest extends TestCase
         };
 
         $collection = new MiddlewareCollection([
-            new JwtAuthentication([
-                'secret' => 'supersecretkeyyoushouldnotcommit',
-                'error' => [TestErrorHandler::class, 'error'],
-            ]),
+            new JwtAuthentication(
+                new Options(error: [TestErrorHandler::class, 'error']),
+                [new Secret('supersecretkeyyoushouldnotcommit', 'HS256', 'acme')]
+            ),
         ]);
 
         $response = $collection->dispatch($request, $default);
@@ -875,15 +786,15 @@ final class JwtAuthenticationTest extends TestCase
         };
 
         $collection = new MiddlewareCollection([
-            new JwtAuthentication([
-                'secret' => 'supersecretkeyyoushouldnotcommittogithub',
-                'error' => function (ResponseInterface $response, $arguments) use (&$dummy) {
+            new JwtAuthentication(
+                new Options(error: function (ResponseInterface $response, $arguments) use (&$dummy) {
                     $dummy = true;
                     $response->getBody()->write('Error');
 
                     return $response;
-                },
-            ]),
+                }),
+                [$this->acmeSecret],
+            ),
         ]);
 
         $response = $collection->dispatch($request, $default);
@@ -906,10 +817,11 @@ final class JwtAuthenticationTest extends TestCase
         };
 
         $collection = new MiddlewareCollection([
-            new JwtAuthentication([
-                'secret' => 'supersecretkeyyoushouldnotcommittogithub',
-                'path' => ['/api', '/bar'],
-            ]),
+            new JwtAuthentication(
+                new Options(),
+                [$this->acmeSecret],
+                [new RequestMethodRule(), new RequestPathRule(['/api', '/bar'])]
+            ),
         ]);
 
         $response = $collection->dispatch($request, $default);
@@ -932,14 +844,14 @@ final class JwtAuthenticationTest extends TestCase
         };
 
         $collection = new MiddlewareCollection([
-            new JwtAuthentication([
-                'secret' => 'supersecretkeyyoushouldnotcommittogithub',
-                'after' => function ($response, $arguments) {
+            new JwtAuthentication(
+                new Options(after: function ($response, $arguments) {
                     return $response
                         ->withBody((new StreamFactory())->createStream())
                         ->withStatus(401);
-                },
-            ]),
+                }),
+                [$this->acmeSecret]
+            ),
         ]);
 
         $response = $collection->dispatch($request, $default);
@@ -963,12 +875,12 @@ final class JwtAuthenticationTest extends TestCase
         };
 
         $collection = new MiddlewareCollection([
-            new JwtAuthentication([
-                'secret' => 'supersecretkeyyoushouldnotcommittogithub',
-                'before' => function ($request, $arguments) {
+            new JwtAuthentication(
+                new Options(before: function ($request, $arguments) {
                     return $request->withAttribute('test', 'test');
-                },
-            ]),
+                }),
+                [$this->acmeSecret]
+            ),
         ]);
 
         $response = $collection->dispatch($request, $default);
@@ -977,6 +889,7 @@ final class JwtAuthenticationTest extends TestCase
         self::assertSame('test', (string) $response->getBody());
     }
 
+    #[RequiresSetting('foo', 'bar')]
     public function testShouldModifyRequestUsingInvokableBefore(): void
     {
         $request = (new ServerRequestFactory())
@@ -992,10 +905,10 @@ final class JwtAuthenticationTest extends TestCase
         };
 
         $collection = new MiddlewareCollection([
-            new JwtAuthentication([
-                'secret' => 'supersecretkeyyoushouldnotcommittogithub',
-                'before' => new TestBeforeHandler(),
-            ]),
+            new JwtAuthentication(
+                new Options(before: new TestBeforeHandler()),
+                [$this->acmeSecret]
+            ),
         ]);
 
         $response = $collection->dispatch($request, $default);
@@ -1004,6 +917,7 @@ final class JwtAuthenticationTest extends TestCase
         self::assertSame('invoke', (string) $response->getBody());
     }
 
+    #[RequiresSetting('foo', 'bar')]
     public function testShouldModifyRequestUsingArrayNotationBefore(): void
     {
         $request = (new ServerRequestFactory())
@@ -1019,10 +933,10 @@ final class JwtAuthenticationTest extends TestCase
         };
 
         $collection = new MiddlewareCollection([
-            new JwtAuthentication([
-                'secret' => 'supersecretkeyyoushouldnotcommittogithub',
-                'before' => [TestBeforeHandler::class, 'before'],
-            ]),
+            new JwtAuthentication(
+                new Options(before: [TestBeforeHandler::class, 'before']),
+                [$this->acmeSecret]
+            ),
         ]);
 
         $response = $collection->dispatch($request, $default);
@@ -1044,13 +958,14 @@ final class JwtAuthenticationTest extends TestCase
         };
 
         $collection = new MiddlewareCollection([
-            new JwtAuthentication([
-                'secret' => 'supersecretkeyyoushouldnotcommittogithub',
-                'rules' => [
+            new JwtAuthentication(
+                new Options(),
+                [$this->acmeSecret],
+                [
                     new RequestPathRule(['/api'], ['/api/login']),
                     new RequestMethodRule(),
                 ],
-            ]),
+            ),
         ]);
 
         $response = $collection->dispatch($request, $default);
@@ -1080,10 +995,11 @@ final class JwtAuthenticationTest extends TestCase
         };
 
         $collection = new MiddlewareCollection([
-            new JwtAuthentication([
-                'secret' => 'supersecretkeyyoushouldnotcommittogithub',
-                'ignore' => '/api/login',
-            ]),
+            new JwtAuthentication(
+                new Options(),
+                [$this->acmeSecret],
+                [new RequestPathRule(['/'], ['/api/login'])],
+            ),
         ]);
 
         $response = $collection->dispatch($request, $default);
@@ -1115,20 +1031,22 @@ final class JwtAuthenticationTest extends TestCase
         };
 
         $collection = new MiddlewareCollection([
-            new JwtAuthentication([
-                'secret' => 'supersecretkeyyoushouldnotcommittogithub',
-                'before' => function ($request, $arguments) {
-                    $before = get_class($this);
+            new JwtAuthentication(
+                new Options(
+                    before: function ($request, $arguments) {
+                        $before = get_class($this);
 
-                    return $request->withAttribute('before', $before);
-                },
-                'after' => function ($response, $arguments) {
-                    $after = get_class($this);
-                    $response->getBody()->write($after);
+                        return $request->withAttribute('before', $before);
+                    },
+                    after: function ($response, $arguments) {
+                        $after = get_class($this);
+                        $response->getBody()->write($after);
 
-                    return $response;
-                },
-            ]),
+                        return $response;
+                    },
+                ),
+                [$this->acmeSecret],
+            ),
         ]);
 
         $response = $collection->dispatch($request, $default);
@@ -1145,10 +1063,10 @@ final class JwtAuthenticationTest extends TestCase
 
         $response = (new ResponseFactory())->createResponse();
 
-        $auth = new JwtAuthentication([
-            'secret' => 'supersecretkeyyoushouldnotcommittogithub',
-            'header' => 'X-Token',
-        ]);
+        $auth = new JwtAuthentication(
+            new Options(header: 'X-Token'),
+            [$this->acmeSecret],
+        );
 
         $next = static function (ServerRequestInterface $request, ResponseInterface $response) {
             $response->getBody()->write('Success');
@@ -1177,12 +1095,12 @@ final class JwtAuthenticationTest extends TestCase
         };
 
         $collection = new MiddlewareCollection([
-            new JwtAuthentication([
-                'secret' => 'supersecretkeyyoushouldnotcommittogithub',
-                'error' => function (ResponseInterface $response, $arguments) use (&$dummy) {
+            new JwtAuthentication(
+                new Options(error: function (ResponseInterface $response, $arguments) use (&$dummy) {
                     $dummy = $arguments['uri'];
-                },
-            ]),
+                }),
+                [$this->acmeSecret],
+            ),
         ]);
 
         $response = $collection->dispatch($request, $default);
@@ -1206,11 +1124,10 @@ final class JwtAuthenticationTest extends TestCase
         };
 
         $collection = new MiddlewareCollection([
-            new JwtAuthentication([
-                'secret' => 'supersecretkeyyoushouldnotcommittogithub',
-                'header' => 'X-Token',
-                'regexp' => '/(.*)/',
-            ]),
+            new JwtAuthentication(
+                new Options(header: 'X-Token', regexp: '/(.*)/'),
+                [$this->acmeSecret]
+            ),
         ]);
 
         $response = $collection->dispatch($request, $default);

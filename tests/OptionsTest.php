@@ -6,13 +6,12 @@ namespace Tuupola\Middleware;
 
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
-use Tuupola\Middleware\Options;
 
 /**
  * @internal
  */
 #[CoversClass(Options::class)]
-class OptionsTest extends TestCase
+final class OptionsTest extends TestCase
 {
     public function testDefaultValues(): void
     {

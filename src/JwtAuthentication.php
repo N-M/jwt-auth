@@ -50,73 +50,37 @@ final class JwtAuthentication implements MiddlewareInterface
     private SplStack $rules;
 
     /**
-     * Stores all the options passed to the middleware.
-     *
-     * @var array{
-     *   secret?: string|array<string>|array<string,string>,
-     *   secure: bool,
-     *   relaxed: array<string>,
-     *   algorithm: array<string>|array<string,string>,
-     *   header: string,
-     *   regexp: string,
-     *   cookie: string,
-     *   attribute: string,
-     *   path: array<string>,
-     *   ignore: array<string>,
-     *   before: null|callable,
-     *   after: null|callable,
-     *   error: null|callable,
-     * }
+     * @param Secret[]        $secrets
+     * @param RuleInterface[] $rules
      */
-    private array $options = [
-        'secure' => true,
-        'relaxed' => ['localhost', '127.0.0.1'],
-        'algorithm' => ['HS256'],
-        'header' => 'Authorization',
-        'regexp' => '/Bearer\\s+(.*)$/i',
-        'cookie' => 'token',
-        'attribute' => 'token',
-        'path' => ['/'],
-        'ignore' => [],
-        'before' => null,
-        'after' => null,
-        'error' => null,
-    ];
+    public function __construct(
+        private readonly Options $options,
+        private array $secrets,
+        ?array $rules = null,
+    ) {
+        foreach ($secrets as $secret) {
+            if (!$secret instanceof Secret) {
+                throw new InvalidArgumentException('balls');
+            }
+        }
 
-    /**
-     * @param array{
-     *   secret?: string|array<string>,
-     *   secure?: bool,
-     *   relaxed?: array<string>,
-     *   algorithm?: array<string>,
-     *   header?: string,
-     *   regexp?: string,
-     *   cookie?: string,
-     *   attribute?: string,
-     *   path?: array<string>,
-     *   ignore?: array<string>,
-     *   before?: null|callable,
-     *   after?: null|callable,
-     *   error?: null|callable,
-     * } $options
-     */
-    public function __construct(array $options = [])
-    {
         // Setup stack for rules
         $this->rules = new SplStack();
-
-        // Store passed in options overwriting any defaults.
-        $this->hydrate($options);
-
-        // If nothing was passed in options add default rules.
-        // This also means $options["rules"] overrides $options["path"]
-        // and $options["ignore"]
-        if (!isset($options['rules'])) {
+        if ($rules === null) {
             $this->rules->push(new RequestMethodRule());
-            $this->rules->push(new RequestPathRule(
-                $this->options['path'],
-                $this->options['ignore'],
-            ));
+            $this->rules->push(new RequestPathRule());
+        } else {
+            foreach ($rules as $rule) {
+                $this->rules->push($rule);
+            }
+        }
+
+        if ($options->before !== null) {
+            $this->before($options->before);
+        }
+
+        if ($options->after !== null) {
+            $this->after($options->after);
         }
     }
 
@@ -134,8 +98,8 @@ final class JwtAuthentication implements MiddlewareInterface
         }
 
         // HTTP allowed only if secure is false or server is in relaxed array.
-        if ('https' !== $scheme && true === $this->options['secure']) {
-            if (!in_array($host, $this->options['relaxed'], true)) {
+        if ('https' !== $scheme && true === $this->options->isSecure) {
+            if (!in_array($host, $this->options->relaxed, true)) {
                 $message = sprintf(
                     'Insecure use of middleware over %s denied by configuration.',
                     strtoupper($scheme)
@@ -164,13 +128,14 @@ final class JwtAuthentication implements MiddlewareInterface
         ];
 
         // Add decoded token to request as attribute when requested.
-        if ($this->options['attribute']) {
-            $request = $request->withAttribute($this->options['attribute'], $decoded);
+        if ($this->options->attribute) {
+            $request = $request->withAttribute($this->options->attribute, $decoded);
         }
 
         // Modify $request before calling next middleware.
-        if (is_callable($this->options['before'])) {
-            $beforeRequest = $this->options['before']($request, $params);
+        $before = $this->options->before;
+        if (is_callable($before)) {
+            $beforeRequest = $before($request, $params);
             if ($beforeRequest instanceof ServerRequestInterface) {
                 $request = $beforeRequest;
             }
@@ -180,8 +145,9 @@ final class JwtAuthentication implements MiddlewareInterface
         $response = $handler->handle($request);
 
         // Modify $response before returning.
-        if (is_callable($this->options['after'])) {
-            $afterResponse = $this->options['after']($response, $params);
+        $after = $this->options->after;
+        if (is_callable($after)) {
+            $afterResponse = $after($response, $params);
             if ($afterResponse instanceof ResponseInterface) {
                 return $afterResponse;
             }
@@ -243,8 +209,9 @@ final class JwtAuthentication implements MiddlewareInterface
      */
     private function processError(ResponseInterface $response, array $arguments): ResponseInterface
     {
-        if (is_callable($this->options['error'])) {
-            $handlerResponse = $this->options['error']($response, $arguments);
+        $error = $this->options->error;
+        if (is_callable($error)) {
+            $handlerResponse = $error($response, $arguments);
             if ($handlerResponse instanceof ResponseInterface) {
                 return $handlerResponse;
             }
@@ -259,10 +226,10 @@ final class JwtAuthentication implements MiddlewareInterface
     private function fetchToken(ServerRequestInterface $request): string
     {
         // Check for token in header.
-        $header = $request->getHeaderLine($this->options['header']);
+        $header = $request->getHeaderLine($this->options->header);
 
         if (false === empty($header)) {
-            if (preg_match($this->options['regexp'], $header, $matches)) {
+            if (preg_match($this->options->regexp, $header, $matches)) {
                 $this->log(LogLevel::DEBUG, 'Using token from request header');
 
                 return $matches[1];
@@ -272,13 +239,13 @@ final class JwtAuthentication implements MiddlewareInterface
         // Token not found in header try a cookie.
         $cookieParams = $request->getCookieParams();
 
-        if (isset($cookieParams[$this->options['cookie']])) {
+        if (isset($cookieParams[$this->options->cookie])) {
             $this->log(LogLevel::DEBUG, 'Using token from cookie');
-            if (preg_match($this->options['regexp'], $cookieParams[$this->options['cookie']], $matches)) {
+            if (preg_match($this->options->regexp, $cookieParams[$this->options->cookie], $matches)) {
                 return $matches[1];
             }
 
-            return $cookieParams[$this->options['cookie']];
+            return $cookieParams[$this->options->cookie];
         }
 
         // If everything fails log and throw.
@@ -294,9 +261,15 @@ final class JwtAuthentication implements MiddlewareInterface
      */
     private function decodeToken(string $token): array
     {
-        $keys = $this->createKeysFromAlgorithms();
-        if (count($keys) === 1) {
-            $keys = current($keys);
+        $keys = [];
+        foreach ($this->secrets as $secret) {
+            $key = new Key($secret->secret, $secret->algorithm);
+
+            if ($secret->kid === null) {
+                $keys[] = $key;
+            } else {
+                $keys[$secret->kid] = $key;
+            }
         }
 
         try {
@@ -440,48 +413,14 @@ final class JwtAuthentication implements MiddlewareInterface
     }
 
     /**
-     * Set the attribute name used to attach decoded token to request.
-     */
-    private function attribute(string $attribute): void
-    {
-        $this->options['attribute'] = $attribute;
-    }
-
-    /**
-     * Set the header where token is searched from.
-     */
-    private function header(string $header): void
-    {
-        $this->options['header'] = $header;
-    }
-
-    /**
-     * Set the regexp used to extract token from header or environment.
-     */
-    private function regexp(string $regexp): void
-    {
-        $this->options['regexp'] = $regexp;
-    }
-
-    /**
-     * Set the allowed algorithms.
-     *
-     * @param string|string[] $algorithm
-     */
-    private function algorithm($algorithm): void
-    {
-        $this->options['algorithm'] = (array) $algorithm;
-    }
-
-    /**
      * Set the before handler.
      */
     private function before(callable $before): void
     {
         if ($before instanceof Closure) {
-            $this->options['before'] = $before->bindTo($this);
+            $this->options->before = $before->bindTo($this);
         } else {
-            $this->options['before'] = $before;
+            $this->options->before = $before;
         }
     }
 
@@ -491,9 +430,9 @@ final class JwtAuthentication implements MiddlewareInterface
     private function after(callable $after): void
     {
         if ($after instanceof Closure) {
-            $this->options['after'] = $after->bindTo($this);
+            $this->options->after = $after->bindTo($this);
         } else {
-            $this->options['after'] = $after;
+            $this->options->after = $after;
         }
     }
 

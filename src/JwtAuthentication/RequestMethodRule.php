@@ -16,9 +16,7 @@ final class RequestMethodRule implements RuleInterface
     /**
      * @param array<string> $ignore
      */
-    public function __construct(private readonly array $ignore = ['OPTIONS'])
-    {
-    }
+    public function __construct(private readonly array $ignore = ['OPTIONS']) {}
 
     public function __invoke(ServerRequestInterface $request): bool
     {

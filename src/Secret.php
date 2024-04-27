@@ -12,7 +12,6 @@ final class Secret
         #[SensitiveParameter]
         public string $secret,
         public string $algorithm,
-        public string|null $kid = null,
-    ) {
-    }
+        public ?string $kid = null,
+    ) {}
 }
