@@ -82,6 +82,10 @@ final class JwtAuthentication implements MiddlewareInterface
         if ($options->after !== null) {
             $this->after($options->after);
         }
+
+        if ($options->error !== null) {
+            $this->error($options->error);
+        }
     }
 
     /**
@@ -386,9 +390,9 @@ final class JwtAuthentication implements MiddlewareInterface
     private function error(callable $error): void
     {
         if ($error instanceof Closure) {
-            $this->options['error'] = $error->bindTo($this);
+            $this->options->error = $error->bindTo($this);
         } else {
-            $this->options['error'] = $error;
+            $this->options->error = $error;
         }
     }
 
