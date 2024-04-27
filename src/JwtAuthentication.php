@@ -38,11 +38,6 @@ final class JwtAuthentication implements MiddlewareInterface
     use DoublePassTrait;
 
     /**
-     * PSR-3 compliant logger.
-     */
-    private ?LoggerInterface $logger = null;
-
-    /**
      * The rules stack.
      *
      * @var SplStack<RuleInterface>
@@ -57,6 +52,7 @@ final class JwtAuthentication implements MiddlewareInterface
         private readonly Options $options,
         private array $secrets,
         ?array $rules = null,
+        private ?LoggerInterface $logger = null
     ) {
         foreach ($secrets as $secret) {
             if (!$secret instanceof Secret) {
@@ -394,14 +390,6 @@ final class JwtAuthentication implements MiddlewareInterface
         } else {
             $this->options->error = $error;
         }
-    }
-
-    /**
-     * Set the logger.
-     */
-    private function logger(?LoggerInterface $logger = null): void
-    {
-        $this->logger = $logger;
     }
 
     /**
