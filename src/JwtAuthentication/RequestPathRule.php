@@ -12,27 +12,13 @@ use Psr\Http\Message\ServerRequestInterface;
 final class RequestPathRule implements RuleInterface
 {
     /**
-     * Stores all the options passed to the rule.
-     *
-     * @var array{
-     *   path: array<string>,
-     *   ignore: array<string>,
-     * }
+     * @param array<string> $path
+     * @param array<string> $ignore
      */
-    private array $options = [
-        'path' => ['/'],
-        'ignore' => [],
-    ];
-
-    /**
-     * @param array{
-     *   path?: array<string>,
-     *   ignore?: array<string>,
-     * } $options
-     */
-    public function __construct(array $options = [])
-    {
-        $this->options = array_merge($this->options, $options);
+    public function __construct(
+        private readonly array $paths = ['/'],
+        private readonly array $ignore = [],
+    ) {
     }
 
     public function __invoke(ServerRequestInterface $request): bool
@@ -41,7 +27,7 @@ final class RequestPathRule implements RuleInterface
         $uri = preg_replace('#/+#', '/', $uri);
 
         // If request path is matches ignore should not authenticate.
-        foreach ((array) $this->options['ignore'] as $ignore) {
+        foreach ($this->ignore as $ignore) {
             $ignore = rtrim($ignore, '/');
             if ((bool) preg_match("@^{$ignore}(/.*)?$@", (string) $uri)) {
                 return false;
@@ -49,7 +35,7 @@ final class RequestPathRule implements RuleInterface
         }
 
         // Otherwise check if path matches and we should authenticate.
-        foreach ((array) $this->options['path'] as $path) {
+        foreach ($this->paths as $path) {
             $path = rtrim($path, '/');
             if ((bool) preg_match("@^{$path}(/.*)?$@", (string) $uri)) {
                 return true;

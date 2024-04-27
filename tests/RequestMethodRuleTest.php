@@ -55,9 +55,7 @@ final class RequestMethodRuleTest extends TestCase
             'https://example.com/api'
         );
 
-        $rule = new RequestMethodRule([
-            'ignore' => ['GET'],
-        ]);
+        $rule = new RequestMethodRule(['GET']);
 
         self::assertFalse($rule($request));
     }

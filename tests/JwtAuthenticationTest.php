@@ -1047,13 +1047,8 @@ final class JwtAuthenticationTest extends TestCase
             new JwtAuthentication([
                 'secret' => 'supersecretkeyyoushouldnotcommittogithub',
                 'rules' => [
-                    new RequestPathRule([
-                        'path' => ['/api'],
-                        'ignore' => ['/api/login'],
-                    ]),
-                    new RequestMethodRule([
-                        'ignore' => ['OPTIONS'],
-                    ]),
+                    new RequestPathRule(['/api'], ['/api/login']),
+                    new RequestMethodRule(),
                 ],
             ]),
         ]);

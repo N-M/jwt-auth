@@ -112,13 +112,11 @@ final class JwtAuthentication implements MiddlewareInterface
         // This also means $options["rules"] overrides $options["path"]
         // and $options["ignore"]
         if (!isset($options['rules'])) {
-            $this->rules->push(new RequestMethodRule([
-                'ignore' => ['OPTIONS'],
-            ]));
-            $this->rules->push(new RequestPathRule([
-                'path' => $this->options['path'],
-                'ignore' => $this->options['ignore'],
-            ]));
+            $this->rules->push(new RequestMethodRule());
+            $this->rules->push(new RequestPathRule(
+                $this->options['path'],
+                $this->options['ignore'],
+            ));
         }
     }
 

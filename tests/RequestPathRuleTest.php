@@ -19,10 +19,10 @@ final class RequestPathRuleTest extends TestCase
             'https://example.com/api'
         );
 
-        $rule = new RequestPathRule(['path' => '/api']);
+        $rule = new RequestPathRule(['/api']);
         self::assertTrue($rule($request));
 
-        $rule = new RequestPathRule(['path' => ['/api', '/foo']]);
+        $rule = new RequestPathRule(['/api', '/foo']);
         self::assertTrue($rule($request));
     }
 
@@ -33,7 +33,7 @@ final class RequestPathRuleTest extends TestCase
             'https://example.com/'
         );
 
-        $rule = new RequestPathRule(['path' => '/']);
+        $rule = new RequestPathRule();
         self::assertTrue($rule($request));
 
         $request = (new ServerRequestFactory())->createServerRequest(
@@ -51,7 +51,7 @@ final class RequestPathRuleTest extends TestCase
             'https://example.com/'
         );
 
-        $rule = new RequestPathRule(['path' => '/api']);
+        $rule = new RequestPathRule(['/api']);
         self::assertFalse($rule($request));
 
         $request = (new ServerRequestFactory())->createServerRequest(
@@ -69,10 +69,7 @@ final class RequestPathRuleTest extends TestCase
             'https://example.com/api'
         );
 
-        $rule = new RequestPathRule([
-            'path' => '/api',
-            'ignore' => ['/api/login'],
-        ]);
+        $rule = new RequestPathRule(['/api'], ['/api/login']);
         self::assertTrue($rule($request));
 
         $request = (new ServerRequestFactory())->createServerRequest(
@@ -91,7 +88,7 @@ final class RequestPathRuleTest extends TestCase
         );
 
         // Should not authenticate
-        $rule = new RequestPathRule(['path' => ['/api/create', '/api/list']]);
+        $rule = new RequestPathRule(['/api/create', '/api/list']);
         self::assertFalse($rule($request));
 
         // Should authenticate
@@ -127,7 +124,7 @@ final class RequestPathRuleTest extends TestCase
         );
 
         // Should authenticate
-        $rule = new RequestPathRule(['path' => ['/api/products/(\\d*)/tickets']]);
+        $rule = new RequestPathRule(['/api/products/(\\d*)/tickets']);
         self::assertTrue($rule($request));
 
         // Should not authenticate
@@ -146,7 +143,7 @@ final class RequestPathRuleTest extends TestCase
             'https://example.com/'
         );
 
-        $rule = new RequestPathRule(['path' => '/v1/api']);
+        $rule = new RequestPathRule(['/v1/api']);
         self::assertFalse($rule($request));
 
         $request = (new ServerRequestFactory())->createServerRequest(
