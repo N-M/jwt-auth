@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Tuupola\Middleware;
 
-use Closure;
 use DomainException;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -52,18 +51,6 @@ final class JwtAuthentication implements MiddlewareInterface
             foreach ($rules as $rule) {
                 $this->rules->push($rule);
             }
-        }
-
-        if ($options->before !== null) {
-            $this->before($options->before);
-        }
-
-        if ($options->after !== null) {
-            $this->after($options->after);
-        }
-
-        if ($options->error !== null) {
-            $this->error($options->error);
         }
     }
 
@@ -186,16 +173,13 @@ final class JwtAuthentication implements MiddlewareInterface
     /**
      * Call the error handler if it exists.
      *
-     * @param mixed[] $arguments
+     * @param array{uri: string, message: string} $arguments
      */
     private function processError(ResponseInterface $response, array $arguments): ResponseInterface
     {
         $error = $this->options->error;
-        if (is_callable($error)) {
-            $handlerResponse = $error($response, $arguments);
-            if ($handlerResponse instanceof ResponseInterface) {
-                return $handlerResponse;
-            }
+        if ($error !== null) {
+            return $error($response, $arguments);
         }
 
         return $response;
@@ -236,18 +220,6 @@ final class JwtAuthentication implements MiddlewareInterface
     }
 
     /**
-     * Set the error handler.
-     */
-    private function error(callable $error): void
-    {
-        if ($error instanceof Closure) {
-            $this->options->error = $error->bindTo($this);
-        } else {
-            $this->options->error = $error;
-        }
-    }
-
-    /**
      * Logs with an arbitrary level.
      *
      * @param mixed[] $context
@@ -256,30 +228,6 @@ final class JwtAuthentication implements MiddlewareInterface
     {
         if ($this->logger) {
             $this->logger->log($level, $message, $context);
-        }
-    }
-
-    /**
-     * Set the before handler.
-     */
-    private function before(callable $before): void
-    {
-        if ($before instanceof Closure) {
-            $this->options->before = $before->bindTo($this);
-        } else {
-            $this->options->before = $before;
-        }
-    }
-
-    /**
-     * Set the after handler.
-     */
-    private function after(callable $after): void
-    {
-        if ($after instanceof Closure) {
-            $this->options->after = $after->bindTo($this);
-        } else {
-            $this->options->after = $after;
         }
     }
 }

@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Tuupola\Middleware;
 
-use Closure;
+use Tuupola\Middleware\Handlers\AfterHandlerInterface;
+use Tuupola\Middleware\Handlers\BeforeHandlerInterface;
 
 final class Options
 {
@@ -18,8 +19,8 @@ final class Options
         public readonly string $regexp = '/Bearer\\s+(.*)$/i',
         public readonly string $cookie = 'token',
         public readonly ?string $attribute = 'token',
-        public ?Closure $before = null,
-        public ?Closure $after = null,
-        public ?Closure $error = null,
+        public ?BeforeHandlerInterface $before = null,
+        public ?AfterHandlerInterface $after = null,
+        public ?AfterHandlerInterface $error = null,
     ) {}
 }

@@ -4,3 +4,8 @@ parameters:
 			message: "#^Parameter \\#1 \\$value of method SplDoublyLinkedList\\<Tuupola\\\\Middleware\\\\JwtAuthentication\\\\RuleInterface\\>\\:\\:push\\(\\) expects Tuupola\\\\Middleware\\\\JwtAuthentication\\\\RuleInterface, callable\\(\\)\\: mixed given\\.$#"
 			count: 1
 			path: src/JwtAuthentication.php
+
+		-
+			message: "#^Parameter \\#1 \\$string of method Psr\\\\Http\\\\Message\\\\StreamInterface\\:\\:write\\(\\) expects string, mixed given\\.$#"
+			count: 2
+			path: tests/JwtAuthenticationTest.php
