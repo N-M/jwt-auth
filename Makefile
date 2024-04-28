@@ -20,7 +20,7 @@ lint: vendor
 	vendor/bin/php-cs-fixer fix --dry-run
 
 unit: vendor
-	XDEBUG_MODE=coverage vendor/bin/phpunit
+	XDEBUG_MODE=coverage vendor/bin/phpunit --display-warnings
 
 static: vendor
 	vendor/bin/phpstan
