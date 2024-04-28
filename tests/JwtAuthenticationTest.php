@@ -7,12 +7,15 @@ use Firebase\JWT\JWT;
 use Override;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\RequiresSetting;
+use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Tuupola\Http\Factory\ResponseFactory;
 use Tuupola\Http\Factory\ServerRequestFactory;
 use Tuupola\Http\Factory\StreamFactory;
+use Tuupola\Middleware\Decoder\DecoderInterface;
+use Tuupola\Middleware\Decoder\FirebaseDecoder;
 use Tuupola\Middleware\JwtAuthentication\RequestMethodRule;
 use Tuupola\Middleware\JwtAuthentication\RequestPathRule;
 
@@ -20,6 +23,8 @@ use Tuupola\Middleware\JwtAuthentication\RequestPathRule;
  * @internal
  */
 #[CoversClass(JwtAuthentication::class)]
+#[UsesClass(Secret::class), UsesClass(Options::class), UsesClass(FirebaseDecoder::class)]
+#[UsesClass(RequestMethodRule::class), UsesClass(RequestPathRule::class)]
 final class JwtAuthenticationTest extends TestCase
 {
     /** @codingStandardsIgnoreStart */
@@ -47,8 +52,8 @@ final class JwtAuthenticationTest extends TestCase
     ];
 
     private JwtAuthentication $middleware;
-    private Secret $acmeSecret;
-    private Secret $betaSecret;
+
+    private DecoderInterface $decoder;
 
     public static function setUpBeforeClass(): void
     {
@@ -59,14 +64,12 @@ final class JwtAuthenticationTest extends TestCase
     #[Override]
     protected function setUp(): void
     {
-        $this->acmeSecret = new Secret('supersecretkeyyoushouldnotcommittogithub', 'HS256', 'acme');
-        $this->middleware = new JwtAuthentication(
-            new Options(),
-            [
-                $this->acmeSecret,
-                new Secret('anothersecretkeyfornevertocommittogithub', 'HS256', 'beta'),
-            ]
+        $this->decoder = new FirebaseDecoder(
+            new Secret('supersecretkeyyoushouldnotcommittogithub', 'HS256', 'acme'),
+            new Secret('anothersecretkeyfornevertocommittogithub', 'HS256', 'beta'),
         );
+
+        $this->middleware = new JwtAuthentication(new Options(), $this->decoder);
     }
 
     public function testShouldReturn401WithoutToken(): void
@@ -105,7 +108,7 @@ final class JwtAuthenticationTest extends TestCase
         $collection = new MiddlewareCollection([
             new JwtAuthentication(
                 new Options(header: 'X-Token'),
-                [$this->acmeSecret],
+                $this->decoder,
             ),
         ]);
 
@@ -131,7 +134,7 @@ final class JwtAuthenticationTest extends TestCase
         $collection = new MiddlewareCollection([
             new JwtAuthentication(
                 new Options(header: 'X-Token', regexp: '/(.*)/'),
-                [$this->acmeSecret],
+                $this->decoder
             ),
         ]);
 
@@ -157,7 +160,7 @@ final class JwtAuthenticationTest extends TestCase
         $collection = new MiddlewareCollection([
             new JwtAuthentication(
                 new Options(cookie: 'nekot'),
-                [$this->acmeSecret],
+                $this->decoder
             ),
         ]);
 
@@ -183,7 +186,7 @@ final class JwtAuthenticationTest extends TestCase
         $collection = new MiddlewareCollection([
             new JwtAuthentication(
                 new Options(cookie: 'nekot'),
-                [$this->acmeSecret],
+                $this->decoder
             ),
         ]);
 
@@ -229,10 +232,10 @@ final class JwtAuthenticationTest extends TestCase
         $collection = new MiddlewareCollection([
             new JwtAuthentication(
                 new Options(),
-                [
+                new FirebaseDecoder(
                     new Secret('supersecretkeyyoushouldnotcommittogithub', 'HS256', 'xxxx'),
                     new Secret('anothersecretkeyfornevertocommittogithub', 'HS256', 'yyyy'),
-                ]
+                )
             ),
         ]);
 
@@ -259,7 +262,7 @@ final class JwtAuthenticationTest extends TestCase
                 new Options(after: function ($response, $arguments) {
                     return $response->withHeader('X-Brawndo', 'plants crave');
                 }),
-                [$this->acmeSecret],
+                $this->decoder
             ),
         ]);
 
@@ -311,8 +314,7 @@ final class JwtAuthenticationTest extends TestCase
         $collection = new MiddlewareCollection([
             new JwtAuthentication([
                 new Options(after: [TestAfterHandler::class, 'after']),
-                [$this->acmeSecret],
-                'after' => [TestAfterHandler::class, 'after'],
+                $this->decoder,
             ]),
         ]);
 
@@ -341,7 +343,9 @@ final class JwtAuthenticationTest extends TestCase
         $collection = new MiddlewareCollection([
             new JwtAuthentication(
                 new Options(),
-                [new Secret('supersecretkeyyoushouldnotcommittogithub', 'nosuch')],
+                new FirebaseDecoder(
+                    new Secret('supersecretkeyyoushouldnotcommittogithub', 'nosuch')
+                ),
             ),
         ]);
 
@@ -429,7 +433,7 @@ final class JwtAuthenticationTest extends TestCase
         $collection = new MiddlewareCollection([
             new JwtAuthentication(
                 new Options(),
-                [$this->acmeSecret],
+                $this->decoder,
                 [new RequestMethodRule(), new RequestPathRule(['/api', '/foo'])],
             ),
         ]);
@@ -455,7 +459,7 @@ final class JwtAuthenticationTest extends TestCase
         $collection = new MiddlewareCollection([
             new JwtAuthentication(
                 new Options(),
-                [$this->acmeSecret],
+                $this->decoder,
                 [
                     new RequestMethodRule(),
                     new RequestPathRule(['/api', '/foo'], ['/api/ping']),
@@ -505,7 +509,7 @@ final class JwtAuthenticationTest extends TestCase
         $collection = new MiddlewareCollection([
             new JwtAuthentication(
                 new Options(isSecure: false),
-                [$this->acmeSecret],
+                $this->decoder
             ),
         ]);
 
@@ -552,7 +556,7 @@ final class JwtAuthenticationTest extends TestCase
         $collection = new MiddlewareCollection([
             new JwtAuthentication(
                 new Options(relaxed: ['example.com']),
-                [$this->acmeSecret]
+                $this->decoder,
             ),
         ]);
 
@@ -603,7 +607,7 @@ final class JwtAuthenticationTest extends TestCase
         $collection = new MiddlewareCollection([
             new JwtAuthentication(
                 new Options(attribute: 'nekot'),
-                [$this->acmeSecret],
+                $this->decoder
             ),
         ]);
 
@@ -635,7 +639,7 @@ final class JwtAuthenticationTest extends TestCase
                     $decoded = $arguments['decoded'];
                     $token = $arguments['token'];
                 }),
-                [$this->acmeSecret]
+                $this->decoder,
             ),
         ]);
 
@@ -670,7 +674,7 @@ final class JwtAuthenticationTest extends TestCase
                     $decoded = $arguments['decoded'];
                     $token = $arguments['token'];
                 }),
-                [$this->acmeSecret],
+                $this->decoder
             ),
         ]);
 
@@ -702,7 +706,7 @@ final class JwtAuthenticationTest extends TestCase
                     return $response
                         ->withHeader('X-Electrolytes', 'Plants');
                 }),
-                [new Secret('supersecretkeyyoushouldnotcommit', 'HS256', 'acme')],
+                $this->decoder,
             ),
         ]);
 
@@ -731,7 +735,7 @@ final class JwtAuthenticationTest extends TestCase
         $collection = new MiddlewareCollection([
             new JwtAuthentication(
                 new Options(error: new TestErrorHandler()),
-                [new Secret('supersecretkeyyoushouldnotcommit', 'HS256', 'acme')],
+                $this->decoder,
             ),
         ]);
 
@@ -760,7 +764,7 @@ final class JwtAuthenticationTest extends TestCase
         $collection = new MiddlewareCollection([
             new JwtAuthentication(
                 new Options(error: [TestErrorHandler::class, 'error']),
-                [new Secret('supersecretkeyyoushouldnotcommit', 'HS256', 'acme')]
+                $this->decoder
             ),
         ]);
 
@@ -793,7 +797,7 @@ final class JwtAuthenticationTest extends TestCase
 
                     return $response;
                 }),
-                [$this->acmeSecret],
+                $this->decoder
             ),
         ]);
 
@@ -819,7 +823,7 @@ final class JwtAuthenticationTest extends TestCase
         $collection = new MiddlewareCollection([
             new JwtAuthentication(
                 new Options(),
-                [$this->acmeSecret],
+                $this->decoder,
                 [new RequestMethodRule(), new RequestPathRule(['/api', '/bar'])]
             ),
         ]);
@@ -850,7 +854,7 @@ final class JwtAuthenticationTest extends TestCase
                         ->withBody((new StreamFactory())->createStream())
                         ->withStatus(401);
                 }),
-                [$this->acmeSecret]
+                $this->decoder,
             ),
         ]);
 
@@ -879,7 +883,7 @@ final class JwtAuthenticationTest extends TestCase
                 new Options(before: function ($request, $arguments) {
                     return $request->withAttribute('test', 'test');
                 }),
-                [$this->acmeSecret]
+                $this->decoder,
             ),
         ]);
 
@@ -907,7 +911,7 @@ final class JwtAuthenticationTest extends TestCase
         $collection = new MiddlewareCollection([
             new JwtAuthentication(
                 new Options(before: new TestBeforeHandler()),
-                [$this->acmeSecret]
+                $this->decoder,
             ),
         ]);
 
@@ -935,7 +939,7 @@ final class JwtAuthenticationTest extends TestCase
         $collection = new MiddlewareCollection([
             new JwtAuthentication(
                 new Options(before: [TestBeforeHandler::class, 'before']),
-                [$this->acmeSecret]
+                $this->decoder,
             ),
         ]);
 
@@ -960,7 +964,7 @@ final class JwtAuthenticationTest extends TestCase
         $collection = new MiddlewareCollection([
             new JwtAuthentication(
                 new Options(),
-                [$this->acmeSecret],
+                $this->decoder,
                 [
                     new RequestPathRule(['/api'], ['/api/login']),
                     new RequestMethodRule(),
@@ -997,7 +1001,7 @@ final class JwtAuthenticationTest extends TestCase
         $collection = new MiddlewareCollection([
             new JwtAuthentication(
                 new Options(),
-                [$this->acmeSecret],
+                $this->decoder,
                 [new RequestPathRule(['/'], ['/api/login'])],
             ),
         ]);
@@ -1045,7 +1049,7 @@ final class JwtAuthenticationTest extends TestCase
                         return $response;
                     },
                 ),
-                [$this->acmeSecret],
+                $this->decoder
             ),
         ]);
 
@@ -1065,7 +1069,7 @@ final class JwtAuthenticationTest extends TestCase
 
         $auth = new JwtAuthentication(
             new Options(header: 'X-Token'),
-            [$this->acmeSecret],
+            $this->decoder
         );
 
         $next = static function (ServerRequestInterface $request, ResponseInterface $response) {
@@ -1099,7 +1103,7 @@ final class JwtAuthenticationTest extends TestCase
                 new Options(error: function (ResponseInterface $response, $arguments) use (&$dummy) {
                     $dummy = $arguments['uri'];
                 }),
-                [$this->acmeSecret],
+                $this->decoder
             ),
         ]);
 
@@ -1126,7 +1130,7 @@ final class JwtAuthenticationTest extends TestCase
         $collection = new MiddlewareCollection([
             new JwtAuthentication(
                 new Options(header: 'X-Token', regexp: '/(.*)/'),
-                [$this->acmeSecret]
+                $this->decoder,
             ),
         ]);
 

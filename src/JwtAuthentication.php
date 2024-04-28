@@ -6,10 +6,6 @@ namespace Tuupola\Middleware;
 
 use Closure;
 use DomainException;
-use Exception;
-use Firebase\JWT\JWT;
-use Firebase\JWT\Key;
-use InvalidArgumentException;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
@@ -19,6 +15,7 @@ use Psr\Log\LogLevel;
 use RuntimeException;
 use SplStack;
 use Tuupola\Http\Factory\ResponseFactory;
+use Tuupola\Middleware\Decoder\DecoderInterface;
 use Tuupola\Middleware\JwtAuthentication\RequestMethodRule;
 use Tuupola\Middleware\JwtAuthentication\RequestPathRule;
 use Tuupola\Middleware\JwtAuthentication\RuleInterface;
@@ -38,21 +35,14 @@ final class JwtAuthentication implements MiddlewareInterface
     private SplStack $rules;
 
     /**
-     * @param Secret[]        $secrets
      * @param RuleInterface[] $rules
      */
     public function __construct(
         private readonly Options $options,
-        private array $secrets,
+        private readonly DecoderInterface $decoder,
         ?array $rules = null,
         private ?LoggerInterface $logger = null
     ) {
-        foreach ($secrets as $secret) {
-            if (!$secret instanceof Secret) {
-                throw new InvalidArgumentException('balls');
-            }
-        }
-
         // Setup stack for rules
         $this->rules = new SplStack();
         if ($rules === null) {
@@ -105,7 +95,7 @@ final class JwtAuthentication implements MiddlewareInterface
         // If token cannot be found or decoded return with 401 Unauthorized.
         try {
             $token = $this->fetchToken($request);
-            $decoded = $this->decodeToken($token);
+            $decoded = $this->decoder->decode($token);
         } catch (DomainException|RuntimeException $exception) {
             $response = (new ResponseFactory())->createResponse(401);
 
@@ -243,38 +233,6 @@ final class JwtAuthentication implements MiddlewareInterface
         $this->log(LogLevel::WARNING, 'Token not found');
 
         throw new RuntimeException('Token not found.');
-    }
-
-    /**
-     * Decode the token.
-     *
-     * @return mixed[]
-     */
-    private function decodeToken(string $token): array
-    {
-        $keys = [];
-        foreach ($this->secrets as $secret) {
-            $key = new Key($secret->secret, $secret->algorithm);
-
-            if ($secret->kid === null) {
-                $keys[] = $key;
-            } else {
-                $keys[$secret->kid] = $key;
-            }
-        }
-
-        try {
-            $decoded = JWT::decode(
-                $token,
-                $keys,
-            );
-
-            return (array) $decoded;
-        } catch (Exception $exception) {
-            $this->log(LogLevel::WARNING, $exception->getMessage(), [$token]);
-
-            throw $exception;
-        }
     }
 
     /**
