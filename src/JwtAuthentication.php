@@ -4,17 +4,16 @@ declare(strict_types=1);
 
 namespace Tuupola\Middleware;
 
-use DomainException;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use Psr\Log\LoggerInterface;
-use Psr\Log\LogLevel;
 use RuntimeException;
 use SplStack;
-use Tuupola\Http\Factory\ResponseFactory;
+use Throwable;
 use Tuupola\Middleware\Decoder\DecoderInterface;
+use Tuupola\Middleware\Exceptions\AuthorizationException;
 use Tuupola\Middleware\JwtAuthentication\RequestMethodRule;
 use Tuupola\Middleware\JwtAuthentication\RequestPathRule;
 use Tuupola\Middleware\JwtAuthentication\RuleInterface;
@@ -55,7 +54,9 @@ final class JwtAuthentication implements MiddlewareInterface
     }
 
     /**
-     * Process a request in PSR-15 style and return a response.
+     * @throws AuthorizationException
+     *
+     * Process a request in PSR-15 style and return a response
      */
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
     {
@@ -80,16 +81,12 @@ final class JwtAuthentication implements MiddlewareInterface
         }
 
         // If token cannot be found or decoded return with 401 Unauthorized.
-        try {
-            $token = $this->fetchToken($request);
-            $decoded = $this->decoder->decode($token);
-        } catch (DomainException|RuntimeException $exception) {
-            $response = (new ResponseFactory())->createResponse(401);
+        $token = $this->fetchToken($request);
 
-            return $this->processError($response, [
-                'message' => $exception->getMessage(),
-                'uri' => (string) $request->getUri(),
-            ]);
+        try {
+            $decoded = $this->decoder->decode($token);
+        } catch (Throwable $ex) {
+            throw new AuthorizationException('', 0, $ex);
         }
 
         $params = [
@@ -171,22 +168,9 @@ final class JwtAuthentication implements MiddlewareInterface
     }
 
     /**
-     * Call the error handler if it exists.
+     * @throws AuthorizationException
      *
-     * @param array{uri: string, message: string} $arguments
-     */
-    private function processError(ResponseInterface $response, array $arguments): ResponseInterface
-    {
-        $error = $this->options->error;
-        if ($error !== null) {
-            return $error($response, $arguments);
-        }
-
-        return $response;
-    }
-
-    /**
-     * Fetch the access token.
+     * Fetch the access token
      */
     private function fetchToken(ServerRequestInterface $request): string
     {
@@ -195,8 +179,6 @@ final class JwtAuthentication implements MiddlewareInterface
 
         if (false === empty($header)) {
             if (preg_match($this->options->regexp, $header, $matches)) {
-                $this->log(LogLevel::DEBUG, 'Using token from request header');
-
                 return $matches[1];
             }
         }
@@ -205,7 +187,6 @@ final class JwtAuthentication implements MiddlewareInterface
         $cookieParams = $request->getCookieParams();
 
         if (isset($cookieParams[$this->options->cookie])) {
-            $this->log(LogLevel::DEBUG, 'Using token from cookie');
             if (preg_match($this->options->regexp, $cookieParams[$this->options->cookie], $matches)) {
                 return $matches[1];
             }
@@ -213,10 +194,7 @@ final class JwtAuthentication implements MiddlewareInterface
             return $cookieParams[$this->options->cookie];
         }
 
-        // If everything fails log and throw.
-        $this->log(LogLevel::WARNING, 'Token not found');
-
-        throw new RuntimeException('Token not found.');
+        throw AuthorizationException::noTokenFound();
     }
 
     /**

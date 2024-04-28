@@ -15,6 +15,7 @@ use Tuupola\Http\Factory\ResponseFactory;
 use Tuupola\Http\Factory\ServerRequestFactory;
 use Tuupola\Middleware\Decoder\DecoderInterface;
 use Tuupola\Middleware\Decoder\FirebaseDecoder;
+use Tuupola\Middleware\Exceptions\AuthorizationException;
 use Tuupola\Middleware\Handlers\AfterHandlerInterface;
 use Tuupola\Middleware\Handlers\BeforeHandlerInterface;
 use Tuupola\Middleware\JwtAuthentication\RequestMethodRule;
@@ -25,7 +26,7 @@ use Tuupola\Middleware\JwtAuthentication\RequestPathRule;
  */
 #[CoversClass(JwtAuthentication::class)]
 #[UsesClass(Secret::class), UsesClass(Options::class), UsesClass(FirebaseDecoder::class)]
-#[UsesClass(RequestMethodRule::class), UsesClass(RequestPathRule::class)]
+#[UsesClass(RequestMethodRule::class), UsesClass(RequestPathRule::class), UsesClass(AuthorizationException::class)]
 final class JwtAuthenticationTest extends TestCase
 {
     /** @codingStandardsIgnoreStart */
@@ -83,24 +84,21 @@ final class JwtAuthenticationTest extends TestCase
         $this->middleware = new JwtAuthentication(new Options(), $this->decoder);
     }
 
-    public function testShouldReturn401WithoutToken(): void
+    public function testShouldThrowAuthorizationExceptionWithoutToken(): void
     {
         $request = (new ServerRequestFactory())
             ->createServerRequest('GET', 'https://example.com/api');
-
         $default = static function (ServerRequestInterface $request) {
             $response = (new ResponseFactory())->createResponse();
             $response->getBody()->write('Success');
 
             return $response;
         };
-
         $collection = new MiddlewareCollection([$this->middleware]);
 
-        $response = $collection->dispatch($request, $default);
-
-        self::assertSame(401, $response->getStatusCode());
-        self::assertSame('', (string) $response->getBody());
+        $this->expectException(AuthorizationException::class);
+        $this->expectExceptionMessage('Token not found.');
+        $collection->dispatch($request, $default);
     }
 
     public function testShouldReturn200WithTokenFromHeader(): void
@@ -227,7 +225,7 @@ final class JwtAuthenticationTest extends TestCase
         self::assertSame('Success', (string) $response->getBody());
     }
 
-    public function testShouldReturn401WithSecretArray(): void
+    public function testShouldThrowExceptionWithWrongSecrets(): void
     {
         $request = (new ServerRequestFactory())
             ->createServerRequest('GET', 'https://example.com/api')
@@ -250,12 +248,11 @@ final class JwtAuthenticationTest extends TestCase
             ),
         ]);
 
-        $response = $collection->dispatch($request, $default);
-        self::assertSame(401, $response->getStatusCode());
-        self::assertSame('', (string) $response->getBody());
+        $this->expectException(AuthorizationException::class);
+        $collection->dispatch($request, $default);
     }
 
-    public function testShouldReturn401WithInvalidAlgorithm(): void
+    public function testShouldThrowExceptionnWithInvalidAlgorithm(): void
     {
         $request = (new ServerRequestFactory())
             ->createServerRequest('GET', 'https://example.com/api')
@@ -277,10 +274,8 @@ final class JwtAuthenticationTest extends TestCase
             ),
         ]);
 
-        $response = $collection->dispatch($request, $default);
-
-        self::assertSame(401, $response->getStatusCode());
-        self::assertSame('', (string) $response->getBody());
+        $this->expectException(AuthorizationException::class);
+        $collection->dispatch($request, $default);
     }
 
     public function testShouldReturn200WithOptions(): void
@@ -304,7 +299,7 @@ final class JwtAuthenticationTest extends TestCase
         self::assertSame('Success', (string) $response->getBody());
     }
 
-    public function testShouldReturn400WithInvalidToken(): void
+    public function testShouldThrowExceptionWithInvalidToken(): void
     {
         $request = (new ServerRequestFactory())
             ->createServerRequest('GET', 'https://example.com/api')
@@ -319,13 +314,11 @@ final class JwtAuthenticationTest extends TestCase
 
         $collection = new MiddlewareCollection([$this->middleware]);
 
-        $response = $collection->dispatch($request, $default);
-
-        self::assertSame(401, $response->getStatusCode());
-        self::assertSame('', (string) $response->getBody());
+        $this->expectException(AuthorizationException::class);
+        $collection->dispatch($request, $default);
     }
 
-    public function testShouldReturn400WithExpiredToken(): void
+    public function testShouldThrowExceptionWithExpiredToken(): void
     {
         $request = (new ServerRequestFactory())
             ->createServerRequest('GET', 'https://example.com/api')
@@ -340,10 +333,8 @@ final class JwtAuthenticationTest extends TestCase
 
         $collection = new MiddlewareCollection([$this->middleware]);
 
-        $response = $collection->dispatch($request, $default);
-
-        self::assertSame(401, $response->getStatusCode());
-        self::assertSame('', (string) $response->getBody());
+        $this->expectException(AuthorizationException::class);
+        $collection->dispatch($request, $default);
     }
 
     public function testShouldReturn200WithoutTokenWithPath(): void
@@ -611,36 +602,6 @@ final class JwtAuthenticationTest extends TestCase
         self::assertSame(self::$acmeToken, $data['token']);
     }
 
-    public function testShouldCallInvokableErrorClass(): void
-    {
-        $request = (new ServerRequestFactory())
-            ->createServerRequest('GET', 'https://example.com/api');
-
-        $default = static function (ServerRequestInterface $request) {
-            $response = (new ResponseFactory())->createResponse();
-            $response->getBody()->write('Success');
-
-            return $response;
-        };
-
-        $collection = new MiddlewareCollection([
-            new JwtAuthentication(
-                new Options(error: $this->errorHandler()),
-                $this->decoder,
-            ),
-        ]);
-
-        $response = $collection->dispatch($request, $default);
-
-        /** @var array{uri: string, message: string} */
-        $data = json_decode((string) $response->getBody(), true);
-
-        self::assertSame(418, $response->getStatusCode());
-        self::assertSame('Bar', $response->getHeaderLine('X-Foo'));
-        self::assertSame('https://example.com/api', $data['uri']);
-        self::assertSame('Token not found.', $data['message']);
-    }
-
     public function testShouldAllowUnauthenticatedHttp(): void
     {
         $request = (new ServerRequestFactory())
@@ -690,10 +651,37 @@ final class JwtAuthenticationTest extends TestCase
             ),
         ]);
 
+        $this->expectException(AuthorizationException::class);
+        $collection->dispatch($request, $default);
+
+        $request = (new ServerRequestFactory())
+            ->createServerRequest('GET', 'https://example.com/api/login');
+
         $response = $collection->dispatch($request, $default);
 
-        self::assertSame(401, $response->getStatusCode());
-        self::assertSame('', (string) $response->getBody());
+        self::assertSame(200, $response->getStatusCode());
+        self::assertSame('Success', (string) $response->getBody());
+    }
+
+    public function testShouldHandleRulesArrayBug84HappyPath(): void
+    {
+        $default = static function (ServerRequestInterface $request) {
+            $response = (new ResponseFactory())->createResponse();
+            $response->getBody()->write('Success');
+
+            return $response;
+        };
+
+        $collection = new MiddlewareCollection([
+            new JwtAuthentication(
+                new Options(),
+                $this->decoder,
+                [
+                    new RequestPathRule(['/api'], ['/api/login']),
+                    new RequestMethodRule(),
+                ],
+            ),
+        ]);
 
         $request = (new ServerRequestFactory())
             ->createServerRequest('GET', 'https://example.com/api/login');
@@ -724,10 +712,29 @@ final class JwtAuthenticationTest extends TestCase
             ),
         ]);
 
-        $response = $collection->dispatch($request, $default);
+        $this->expectException(AuthorizationException::class);
+        $collection->dispatch($request, $default);
+    }
 
-        self::assertSame(401, $response->getStatusCode());
-        self::assertSame('', (string) $response->getBody());
+    public function testShouldHandleDefaultPathBug118HappyPath(): void
+    {
+        $request = (new ServerRequestFactory())
+            ->createServerRequest('GET', 'https://example.com/api');
+
+        $default = static function (ServerRequestInterface $request) {
+            $response = (new ResponseFactory())->createResponse();
+            $response->getBody()->write('Success');
+
+            return $response;
+        };
+
+        $collection = new MiddlewareCollection([
+            new JwtAuthentication(
+                new Options(),
+                $this->decoder,
+                [new RequestPathRule(['/'], ['/api/login'])],
+            ),
+        ]);
 
         $request = (new ServerRequestFactory())
             ->createServerRequest('GET', 'https://example.com/api/login');
@@ -812,20 +819,6 @@ final class JwtAuthenticationTest extends TestCase
                 $body->write(json_encode($arguments, JSON_THROW_ON_ERROR));
 
                 return $response->withHeader('X-Brawndo', 'plants crave');
-            }
-        };
-    }
-
-    private function errorHandler(): AfterHandlerInterface
-    {
-        return new class() implements AfterHandlerInterface {
-            public function __invoke(ResponseInterface $response, array $arguments): ResponseInterface
-            {
-                $response->getBody()->write(json_encode($arguments, JSON_THROW_ON_ERROR));
-
-                return $response->withStatus(418)
-                    ->withHeader('X-Electrolytes', 'Plants')
-                    ->withHeader('X-Foo', 'Bar');
             }
         };
     }

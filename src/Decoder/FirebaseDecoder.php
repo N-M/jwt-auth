@@ -49,13 +49,8 @@ final class FirebaseDecoder implements DecoderInterface
             return (array) JWT::decode($jwt, $keys);
         } catch (InvalidArgumentException $e) {
             throw $e;
-            // provided key/key-array is empty or malformed.
         } catch (DomainException $e) {
             throw $e;
-            // provided algorithm is unsupported OR
-            // provided key is invalid OR
-            // unknown error thrown in openSSL or libsodium OR
-            // libsodium is required but not available.
         } catch (JwtSignatureInvalidException $e) {
             throw new SignatureInvalidException($e->getMessage(), 0, $e);
         } catch (JwtBeforeValidException $e) {
@@ -64,10 +59,6 @@ final class FirebaseDecoder implements DecoderInterface
             throw new ExpiredException($e->getMessage(), 0, $e);
         } catch (UnexpectedValueException $e) {
             throw $e;
-            // provided JWT is malformed OR
-            // provided JWT is missing an algorithm / using an unsupported algorithm OR
-            // provided JWT algorithm does not match provided key OR
-            // provided key ID in key/key-array is empty or invalid.
         }
     }
 }
