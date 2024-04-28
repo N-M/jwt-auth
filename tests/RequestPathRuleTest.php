@@ -74,7 +74,7 @@ final class RequestPathRuleTest extends TestCase
 
         $request = (new ServerRequestFactory())->createServerRequest(
             'GET',
-            'https://example.com/login'
+            'https://example.com/api/login'
         );
 
         self::assertFalse($rule($request));
