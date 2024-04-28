@@ -8,7 +8,6 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
-use Psr\Log\LoggerInterface;
 use RuntimeException;
 use SplStack;
 use Throwable;
@@ -39,7 +38,6 @@ final class JwtAuthentication implements MiddlewareInterface
         private readonly Options $options,
         private readonly DecoderInterface $decoder,
         ?array $rules = null,
-        private ?LoggerInterface $logger = null
     ) {
         // Setup stack for rules
         $this->rules = new SplStack();
@@ -195,17 +193,5 @@ final class JwtAuthentication implements MiddlewareInterface
         }
 
         throw AuthorizationException::noTokenFound();
-    }
-
-    /**
-     * Logs with an arbitrary level.
-     *
-     * @param mixed[] $context
-     */
-    private function log(string $level, string $message, array $context = []): void
-    {
-        if ($this->logger) {
-            $this->logger->log($level, $message, $context);
-        }
     }
 }

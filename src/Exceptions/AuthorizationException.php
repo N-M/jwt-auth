@@ -8,6 +8,9 @@ use RuntimeException;
 
 final class AuthorizationException extends RuntimeException
 {
+    /**
+     * @codeCoverageIgnore
+     */
     public static function noTokenFound(): self
     {
         return new self('Token not found.');

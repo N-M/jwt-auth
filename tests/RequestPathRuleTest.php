@@ -2,9 +2,9 @@
 
 namespace Tuupola\Middleware\JwtAuthentication;
 
+use Laminas\Diactoros\ServerRequestFactory;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
-use Tuupola\Http\Factory\ServerRequestFactory;
 
 /**
  * @internal

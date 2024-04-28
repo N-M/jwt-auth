@@ -2,17 +2,18 @@
 
 namespace Tuupola\Middleware;
 
+use Closure;
 use DateTimeImmutable;
 use Equip\Dispatch\MiddlewareCollection;
 use Firebase\JWT\JWT;
+use Laminas\Diactoros\ResponseFactory;
+use Laminas\Diactoros\ServerRequestFactory;
 use Override;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use Tuupola\Http\Factory\ResponseFactory;
-use Tuupola\Http\Factory\ServerRequestFactory;
 use Tuupola\Middleware\Decoder\DecoderInterface;
 use Tuupola\Middleware\Decoder\FirebaseDecoder;
 use Tuupola\Middleware\Exceptions\AuthorizationException;
@@ -88,17 +89,11 @@ final class JwtAuthenticationTest extends TestCase
     {
         $request = (new ServerRequestFactory())
             ->createServerRequest('GET', 'https://example.com/api');
-        $default = static function (ServerRequestInterface $request) {
-            $response = (new ResponseFactory())->createResponse();
-            $response->getBody()->write('Success');
-
-            return $response;
-        };
         $collection = new MiddlewareCollection([$this->middleware]);
 
         $this->expectException(AuthorizationException::class);
         $this->expectExceptionMessage('Token not found.');
-        $collection->dispatch($request, $default);
+        $collection->dispatch($request, $this->defaultclosure());
     }
 
     public function testShouldReturn200WithTokenFromHeader(): void
@@ -107,13 +102,6 @@ final class JwtAuthenticationTest extends TestCase
             ->createServerRequest('GET', 'https://example.com/api')
             ->withHeader('X-Token', 'Bearer ' . self::$acmeToken);
 
-        $default = static function (ServerRequestInterface $request) {
-            $response = (new ResponseFactory())->createResponse();
-            $response->getBody()->write('Success');
-
-            return $response;
-        };
-
         $collection = new MiddlewareCollection([
             new JwtAuthentication(
                 new Options(header: 'X-Token'),
@@ -121,7 +109,7 @@ final class JwtAuthenticationTest extends TestCase
             ),
         ]);
 
-        $response = $collection->dispatch($request, $default);
+        $response = $collection->dispatch($request, $this->defaultclosure());
 
         self::assertSame(200, $response->getStatusCode());
         self::assertSame('Success', (string) $response->getBody());
@@ -133,13 +121,6 @@ final class JwtAuthenticationTest extends TestCase
             ->createServerRequest('GET', 'https://example.com/api')
             ->withHeader('X-Token', self::$acmeToken);
 
-        $default = static function (ServerRequestInterface $request) {
-            $response = (new ResponseFactory())->createResponse();
-            $response->getBody()->write('Success');
-
-            return $response;
-        };
-
         $collection = new MiddlewareCollection([
             new JwtAuthentication(
                 new Options(header: 'X-Token', regexp: '/(.*)/'),
@@ -147,7 +128,7 @@ final class JwtAuthenticationTest extends TestCase
             ),
         ]);
 
-        $response = $collection->dispatch($request, $default);
+        $response = $collection->dispatch($request, $this->defaultclosure());
 
         self::assertSame(200, $response->getStatusCode());
         self::assertSame('Success', (string) $response->getBody());
@@ -159,13 +140,6 @@ final class JwtAuthenticationTest extends TestCase
             ->createServerRequest('GET', 'https://example.com/api')
             ->withCookieParams(['nekot' => self::$acmeToken]);
 
-        $default = static function (ServerRequestInterface $request) {
-            $response = (new ResponseFactory())->createResponse();
-            $response->getBody()->write('Success');
-
-            return $response;
-        };
-
         $collection = new MiddlewareCollection([
             new JwtAuthentication(
                 new Options(cookie: 'nekot'),
@@ -173,7 +147,7 @@ final class JwtAuthenticationTest extends TestCase
             ),
         ]);
 
-        $response = $collection->dispatch($request, $default);
+        $response = $collection->dispatch($request, $this->defaultclosure());
 
         self::assertSame(200, $response->getStatusCode());
         self::assertSame('Success', (string) $response->getBody());
@@ -185,13 +159,6 @@ final class JwtAuthenticationTest extends TestCase
             ->createServerRequest('GET', 'https://example.com/api')
             ->withCookieParams(['nekot' => 'Bearer ' . self::$acmeToken]);
 
-        $default = static function (ServerRequestInterface $request) {
-            $response = (new ResponseFactory())->createResponse();
-            $response->getBody()->write('Success');
-
-            return $response;
-        };
-
         $collection = new MiddlewareCollection([
             new JwtAuthentication(
                 new Options(cookie: 'nekot'),
@@ -199,7 +166,7 @@ final class JwtAuthenticationTest extends TestCase
             ),
         ]);
 
-        $response = $collection->dispatch($request, $default);
+        $response = $collection->dispatch($request, $this->defaultclosure());
 
         self::assertSame(200, $response->getStatusCode());
         self::assertSame('Success', (string) $response->getBody());
@@ -211,16 +178,9 @@ final class JwtAuthenticationTest extends TestCase
             ->createServerRequest('GET', 'https://example.com/api')
             ->withHeader('Authorization', 'Bearer ' . self::$betaToken);
 
-        $default = static function (ServerRequestInterface $request) {
-            $response = (new ResponseFactory())->createResponse();
-            $response->getBody()->write('Success');
-
-            return $response;
-        };
-
         $collection = new MiddlewareCollection([$this->middleware]);
 
-        $response = $collection->dispatch($request, $default);
+        $response = $collection->dispatch($request, $this->defaultclosure());
         self::assertSame(200, $response->getStatusCode());
         self::assertSame('Success', (string) $response->getBody());
     }
@@ -230,13 +190,6 @@ final class JwtAuthenticationTest extends TestCase
         $request = (new ServerRequestFactory())
             ->createServerRequest('GET', 'https://example.com/api')
             ->withHeader('Authorization', 'Bearer ' . self::$betaToken);
-
-        $default = static function (ServerRequestInterface $request) {
-            $response = (new ResponseFactory())->createResponse();
-            $response->getBody()->write('Success');
-
-            return $response;
-        };
 
         $collection = new MiddlewareCollection([
             new JwtAuthentication(
@@ -249,7 +202,7 @@ final class JwtAuthenticationTest extends TestCase
         ]);
 
         $this->expectException(AuthorizationException::class);
-        $collection->dispatch($request, $default);
+        $collection->dispatch($request, $this->defaultclosure());
     }
 
     public function testShouldThrowExceptionnWithInvalidAlgorithm(): void
@@ -257,13 +210,6 @@ final class JwtAuthenticationTest extends TestCase
         $request = (new ServerRequestFactory())
             ->createServerRequest('GET', 'https://example.com/api')
             ->withHeader('Authorization', 'Bearer ' . self::$acmeToken);
-
-        $default = static function (ServerRequestInterface $request) {
-            $response = (new ResponseFactory())->createResponse();
-            $response->getBody()->write('Success');
-
-            return $response;
-        };
 
         $collection = new MiddlewareCollection([
             new JwtAuthentication(
@@ -275,7 +221,7 @@ final class JwtAuthenticationTest extends TestCase
         ]);
 
         $this->expectException(AuthorizationException::class);
-        $collection->dispatch($request, $default);
+        $collection->dispatch($request, $this->defaultclosure());
     }
 
     public function testShouldReturn200WithOptions(): void
@@ -284,16 +230,9 @@ final class JwtAuthenticationTest extends TestCase
             ->createServerRequest('GET', 'https://example.com/api')
             ->withMethod('OPTIONS');
 
-        $default = static function (ServerRequestInterface $request) {
-            $response = (new ResponseFactory())->createResponse();
-            $response->getBody()->write('Success');
-
-            return $response;
-        };
-
         $collection = new MiddlewareCollection([$this->middleware]);
 
-        $response = $collection->dispatch($request, $default);
+        $response = $collection->dispatch($request, $this->defaultclosure());
 
         self::assertSame(200, $response->getStatusCode());
         self::assertSame('Success', (string) $response->getBody());
@@ -305,17 +244,10 @@ final class JwtAuthenticationTest extends TestCase
             ->createServerRequest('GET', 'https://example.com/api')
             ->withHeader('Authorization', 'Bearer invalid' . self::$acmeToken);
 
-        $default = static function (ServerRequestInterface $request) {
-            $response = (new ResponseFactory())->createResponse();
-            $response->getBody()->write('Success');
-
-            return $response;
-        };
-
         $collection = new MiddlewareCollection([$this->middleware]);
 
         $this->expectException(AuthorizationException::class);
-        $collection->dispatch($request, $default);
+        $collection->dispatch($request, $this->defaultclosure());
     }
 
     public function testShouldThrowExceptionWithExpiredToken(): void
@@ -324,30 +256,16 @@ final class JwtAuthenticationTest extends TestCase
             ->createServerRequest('GET', 'https://example.com/api')
             ->withHeader('Authorization', 'Bearer ' . self::$expired);
 
-        $default = static function (ServerRequestInterface $request) {
-            $response = (new ResponseFactory())->createResponse();
-            $response->getBody()->write('Success');
-
-            return $response;
-        };
-
         $collection = new MiddlewareCollection([$this->middleware]);
 
         $this->expectException(AuthorizationException::class);
-        $collection->dispatch($request, $default);
+        $collection->dispatch($request, $this->defaultclosure());
     }
 
     public function testShouldReturn200WithoutTokenWithPath(): void
     {
         $request = (new ServerRequestFactory())
             ->createServerRequest('GET', 'https://example.com/public');
-
-        $default = static function (ServerRequestInterface $request) {
-            $response = (new ResponseFactory())->createResponse();
-            $response->getBody()->write('Success');
-
-            return $response;
-        };
 
         $collection = new MiddlewareCollection([
             new JwtAuthentication(
@@ -357,7 +275,7 @@ final class JwtAuthenticationTest extends TestCase
             ),
         ]);
 
-        $response = $collection->dispatch($request, $default);
+        $response = $collection->dispatch($request, $this->defaultclosure());
 
         self::assertSame(200, $response->getStatusCode());
         self::assertSame('Success', (string) $response->getBody());
@@ -367,13 +285,6 @@ final class JwtAuthenticationTest extends TestCase
     {
         $request = (new ServerRequestFactory())
             ->createServerRequest('GET', 'https://example.com/api/ping');
-
-        $default = static function (ServerRequestInterface $request) {
-            $response = (new ResponseFactory())->createResponse();
-            $response->getBody()->write('Success');
-
-            return $response;
-        };
 
         $collection = new MiddlewareCollection([
             new JwtAuthentication(
@@ -386,7 +297,7 @@ final class JwtAuthenticationTest extends TestCase
             ),
         ]);
 
-        $response = $collection->dispatch($request, $default);
+        $response = $collection->dispatch($request, $this->defaultclosure());
 
         self::assertSame(200, $response->getStatusCode());
         self::assertSame('Success', (string) $response->getBody());
@@ -400,16 +311,9 @@ final class JwtAuthenticationTest extends TestCase
             ->createServerRequest('GET', 'http://example.com/api')
             ->withHeader('Authorization', 'Bearer ' . self::$acmeToken);
 
-        $default = static function (ServerRequestInterface $request) {
-            $response = (new ResponseFactory())->createResponse();
-            $response->getBody()->write('Success');
-
-            return $response;
-        };
-
         $collection = new MiddlewareCollection([$this->middleware]);
 
-        $response = $collection->dispatch($request, $default);
+        $response = $collection->dispatch($request, $this->defaultclosure());
     }
 
     public function testShouldAllowInsecure(): void
@@ -418,13 +322,6 @@ final class JwtAuthenticationTest extends TestCase
             ->createServerRequest('GET', 'http://example.com/api')
             ->withHeader('Authorization', 'Bearer ' . self::$acmeToken);
 
-        $default = static function (ServerRequestInterface $request) {
-            $response = (new ResponseFactory())->createResponse();
-            $response->getBody()->write('Success');
-
-            return $response;
-        };
-
         $collection = new MiddlewareCollection([
             new JwtAuthentication(
                 new Options(isSecure: false),
@@ -432,7 +329,7 @@ final class JwtAuthenticationTest extends TestCase
             ),
         ]);
 
-        $response = $collection->dispatch($request, $default);
+        $response = $collection->dispatch($request, $this->defaultclosure());
 
         self::assertSame(200, $response->getStatusCode());
         self::assertSame('Success', (string) $response->getBody());
@@ -444,16 +341,9 @@ final class JwtAuthenticationTest extends TestCase
             ->createServerRequest('GET', 'http://localhost/api')
             ->withHeader('Authorization', 'Bearer ' . self::$acmeToken);
 
-        $default = static function (ServerRequestInterface $request) {
-            $response = (new ResponseFactory())->createResponse();
-            $response->getBody()->write('Success');
-
-            return $response;
-        };
-
         $collection = new MiddlewareCollection([$this->middleware]);
 
-        $response = $collection->dispatch($request, $default);
+        $response = $collection->dispatch($request, $this->defaultclosure());
 
         self::assertSame(200, $response->getStatusCode());
         self::assertSame('Success', (string) $response->getBody());
@@ -465,13 +355,6 @@ final class JwtAuthenticationTest extends TestCase
             ->createServerRequest('GET', 'http://example.com/api')
             ->withHeader('Authorization', 'Bearer ' . self::$acmeToken);
 
-        $default = static function (ServerRequestInterface $request) {
-            $response = (new ResponseFactory())->createResponse();
-            $response->getBody()->write('Success');
-
-            return $response;
-        };
-
         $collection = new MiddlewareCollection([
             new JwtAuthentication(
                 new Options(relaxed: ['example.com']),
@@ -479,7 +362,7 @@ final class JwtAuthenticationTest extends TestCase
             ),
         ]);
 
-        $response = $collection->dispatch($request, $default);
+        $response = $collection->dispatch($request, $this->defaultclosure());
 
         self::assertSame(200, $response->getStatusCode());
         self::assertSame('Success', (string) $response->getBody());
@@ -547,13 +430,6 @@ final class JwtAuthenticationTest extends TestCase
         $decoded = null;
         $token = null;
 
-        $default = static function (ServerRequestInterface $request) {
-            $response = (new ResponseFactory())->createResponse();
-            $response->getBody()->write('Success');
-
-            return $response;
-        };
-
         $collection = new MiddlewareCollection([
             new JwtAuthentication(
                 new Options(after: $this->afterHandler()),
@@ -561,7 +437,7 @@ final class JwtAuthenticationTest extends TestCase
             ),
         ]);
 
-        $response = $collection->dispatch($request, $default);
+        $response = $collection->dispatch($request, $this->defaultclosure());
 
         /** @var array{decoded: array<string, mixed>, token: string} */
         $data = json_decode((string) $response->getBody(), true);
@@ -607,13 +483,6 @@ final class JwtAuthenticationTest extends TestCase
         $request = (new ServerRequestFactory())
             ->createServerRequest('GET', 'https://example.com/public/foo');
 
-        $default = static function (ServerRequestInterface $request) {
-            $response = (new ResponseFactory())->createResponse();
-            $response->getBody()->write('Success');
-
-            return $response;
-        };
-
         $collection = new MiddlewareCollection([
             new JwtAuthentication(
                 new Options(),
@@ -622,7 +491,7 @@ final class JwtAuthenticationTest extends TestCase
             ),
         ]);
 
-        $response = $collection->dispatch($request, $default);
+        $response = $collection->dispatch($request, $this->defaultclosure());
 
         self::assertSame(200, $response->getStatusCode());
         self::assertSame('Success', (string) $response->getBody());
@@ -633,13 +502,6 @@ final class JwtAuthenticationTest extends TestCase
         $request = (new ServerRequestFactory())
             ->createServerRequest('GET', 'https://example.com/api');
 
-        $default = static function (ServerRequestInterface $request) {
-            $response = (new ResponseFactory())->createResponse();
-            $response->getBody()->write('Success');
-
-            return $response;
-        };
-
         $collection = new MiddlewareCollection([
             new JwtAuthentication(
                 new Options(),
@@ -652,12 +514,12 @@ final class JwtAuthenticationTest extends TestCase
         ]);
 
         $this->expectException(AuthorizationException::class);
-        $collection->dispatch($request, $default);
+        $collection->dispatch($request, $this->defaultclosure());
 
         $request = (new ServerRequestFactory())
             ->createServerRequest('GET', 'https://example.com/api/login');
 
-        $response = $collection->dispatch($request, $default);
+        $response = $collection->dispatch($request, $this->defaultclosure());
 
         self::assertSame(200, $response->getStatusCode());
         self::assertSame('Success', (string) $response->getBody());
@@ -665,13 +527,6 @@ final class JwtAuthenticationTest extends TestCase
 
     public function testShouldHandleRulesArrayBug84HappyPath(): void
     {
-        $default = static function (ServerRequestInterface $request) {
-            $response = (new ResponseFactory())->createResponse();
-            $response->getBody()->write('Success');
-
-            return $response;
-        };
-
         $collection = new MiddlewareCollection([
             new JwtAuthentication(
                 new Options(),
@@ -686,7 +541,7 @@ final class JwtAuthenticationTest extends TestCase
         $request = (new ServerRequestFactory())
             ->createServerRequest('GET', 'https://example.com/api/login');
 
-        $response = $collection->dispatch($request, $default);
+        $response = $collection->dispatch($request, $this->defaultclosure());
 
         self::assertSame(200, $response->getStatusCode());
         self::assertSame('Success', (string) $response->getBody());
@@ -697,13 +552,6 @@ final class JwtAuthenticationTest extends TestCase
         $request = (new ServerRequestFactory())
             ->createServerRequest('GET', 'https://example.com/api');
 
-        $default = static function (ServerRequestInterface $request) {
-            $response = (new ResponseFactory())->createResponse();
-            $response->getBody()->write('Success');
-
-            return $response;
-        };
-
         $collection = new MiddlewareCollection([
             new JwtAuthentication(
                 new Options(),
@@ -713,20 +561,13 @@ final class JwtAuthenticationTest extends TestCase
         ]);
 
         $this->expectException(AuthorizationException::class);
-        $collection->dispatch($request, $default);
+        $collection->dispatch($request, $this->defaultclosure());
     }
 
     public function testShouldHandleDefaultPathBug118HappyPath(): void
     {
         $request = (new ServerRequestFactory())
             ->createServerRequest('GET', 'https://example.com/api');
-
-        $default = static function (ServerRequestInterface $request) {
-            $response = (new ResponseFactory())->createResponse();
-            $response->getBody()->write('Success');
-
-            return $response;
-        };
 
         $collection = new MiddlewareCollection([
             new JwtAuthentication(
@@ -739,7 +580,7 @@ final class JwtAuthenticationTest extends TestCase
         $request = (new ServerRequestFactory())
             ->createServerRequest('GET', 'https://example.com/api/login');
 
-        $response = $collection->dispatch($request, $default);
+        $response = $collection->dispatch($request, $this->defaultclosure());
 
         self::assertSame(200, $response->getStatusCode());
         self::assertSame('Success', (string) $response->getBody());
@@ -776,13 +617,6 @@ final class JwtAuthenticationTest extends TestCase
             ->createServerRequest('GET', 'https://example.com/api')
             ->withCookieParams(['token' => self::$acmeToken]);
 
-        $default = static function (ServerRequestInterface $request) {
-            $response = (new ResponseFactory())->createResponse();
-            $response->getBody()->write('Success');
-
-            return $response;
-        };
-
         $collection = new MiddlewareCollection([
             new JwtAuthentication(
                 new Options(header: 'X-Token', regexp: '/(.*)/'),
@@ -790,7 +624,7 @@ final class JwtAuthenticationTest extends TestCase
             ),
         ]);
 
-        $response = $collection->dispatch($request, $default);
+        $response = $collection->dispatch($request, $this->defaultclosure());
 
         self::assertSame(200, $response->getStatusCode());
         self::assertSame('Success', (string) $response->getBody());
@@ -820,6 +654,16 @@ final class JwtAuthenticationTest extends TestCase
 
                 return $response->withHeader('X-Brawndo', 'plants crave');
             }
+        };
+    }
+
+    private function defaultClosure(): Closure
+    {
+        return static function (ServerRequestInterface $request): ResponseInterface {
+            $response = (new ResponseFactory())->createResponse();
+            $response->getBody()->write('Success');
+
+            return $response;
         };
     }
 }
