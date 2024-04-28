@@ -2,6 +2,7 @@
 
 namespace Tuupola\Middleware;
 
+use DateTimeImmutable;
 use Equip\Dispatch\MiddlewareCollection;
 use Firebase\JWT\JWT;
 use Override;
@@ -30,22 +31,23 @@ final class JwtAuthenticationTest extends TestCase
     /** @codingStandardsIgnoreStart */
     public static string $acmeToken = '';
     public static string $betaToken = '';
-    public static string $expired = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJBY21lIFRvb3RocGljcyBMdGQiLCJpYXQiOjE0Mjg4MTk5NDEsImV4cCI6MTQ4MDcyMzIwMCwiYXVkIjoid3d3LmV4YW1wbGUuY29tIiwic3ViIjoic29tZW9uZUBleGFtcGxlLmNvbSIsInNjb3BlIjpbInJlYWQiLCJ3cml0ZSIsImRlbGV0ZSJdfQ.ZydGEHVmca4ofQRCuMOfZrUXprAoe5GcySg4I-lwIjc';
+    public static string $expired = '';
 
-    /** @codingStandardsIgnoreEnd */
+    /**
+     * @var array<string, mixed>
+     */
     public static array $acmeTokenArray = [
         'iss' => 'Acme Toothpics Ltd',
-        'iat' => '1428819941',
-        'exp' => '1744352741',
         'aud' => 'www.example.com',
         'sub' => 'someone@example.com',
         'scope' => ['read', 'write', 'delete'],
     ];
 
+    /**
+     * @var array<string, mixed>
+     */
     public static array $betaTokenArray = [
         'iss' => 'Beta Sponsorship Ltd',
-        'iat' => '1428819941',
-        'exp' => '1744352741',
         'aud' => 'www.example.com',
         'sub' => 'someone@example.com',
         'scope' => ['read'],
@@ -57,8 +59,17 @@ final class JwtAuthenticationTest extends TestCase
 
     public static function setUpBeforeClass(): void
     {
+        $data = [
+            'iat' => (new DateTimeImmutable())->getTimestamp(),
+            'exp' => (new DateTimeImmutable('+5 minutes'))->getTimestamp(),
+        ];
+
+        self::$acmeTokenArray = array_merge(self::$acmeTokenArray, $data);
+        self::$betaTokenArray = array_merge(self::$betaTokenArray, $data);
+
         self::$acmeToken = JWT::encode(self::$acmeTokenArray, 'supersecretkeyyoushouldnotcommittogithub', 'HS256', 'acme');
         self::$betaToken = JWT::encode(self::$betaTokenArray, 'anothersecretkeyfornevertocommittogithub', 'HS256', 'beta');
+        self::$expired = JWT::encode(['exp' => (new DateTimeImmutable('-5 minutes'))->getTimestamp()], 'supersecretkeyyoushouldnotcommittogithub', 'HS256', 'acme');
     }
 
     #[Override]
@@ -312,10 +323,10 @@ final class JwtAuthenticationTest extends TestCase
         };
 
         $collection = new MiddlewareCollection([
-            new JwtAuthentication([
+            new JwtAuthentication(
                 new Options(after: [TestAfterHandler::class, 'after']),
                 $this->decoder,
-            ]),
+            ),
         ]);
 
         $response = $collection->dispatch($request, $default);
@@ -573,6 +584,7 @@ final class JwtAuthenticationTest extends TestCase
             ->withHeader('Authorization', 'Bearer ' . self::$acmeToken);
 
         $default = static function (ServerRequestInterface $request) {
+            /** @var array<string, mixed> */
             $acmeToken = $request->getAttribute('token');
 
             $response = (new ResponseFactory())->createResponse();
@@ -596,6 +608,7 @@ final class JwtAuthenticationTest extends TestCase
             ->withHeader('Authorization', 'Bearer ' . self::$acmeToken);
 
         $default = static function (ServerRequestInterface $request) {
+            /** @var array<string, mixed>$acmeToken */
             $acmeToken = $request->getAttribute('nekot');
 
             $response = (new ResponseFactory())->createResponse();
@@ -651,7 +664,6 @@ final class JwtAuthenticationTest extends TestCase
         self::assertSame(self::$acmeToken, $token);
     }
 
-    #[Be]
     public function testShouldCallBeforeWithProperArguments(): void
     {
         $request = (new ServerRequestFactory())
@@ -870,8 +882,10 @@ final class JwtAuthenticationTest extends TestCase
             ->createServerRequest('GET', 'https://example.com/')
             ->withHeader('Authorization', 'Bearer ' . self::$acmeToken);
 
-        $default = function (ServerRequestInterface $request) {
+        $default = static function (ServerRequestInterface $request) {
             $response = (new ResponseFactory())->createResponse();
+
+            /** @var string */
             $test = $request->getAttribute('test');
             $response->getBody()->write($test);
 

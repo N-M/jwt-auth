@@ -74,6 +74,9 @@ final class FirebaseDecoderTest extends TestCase
         yield 'iat is in the future' => [['iat' => (new DateTime('+5 minutes'))->getTimestamp()]];
     }
 
+    /**
+     * @param array<string, mixed> $payload
+     */
     #[DataProvider('beforeValidProvider')]
     public function testBeforeValidExceptionIsThrown(array $payload): void
     {
@@ -100,6 +103,9 @@ final class FirebaseDecoderTest extends TestCase
         self::assertSame($now, $decoded['iat']);
     }
 
+    /**
+     * @param array<string, mixed> $payload
+     */
     private function encode(array $payload): string
     {
         return JWT::encode($payload, 'tooManySecrets', 'HS256', 'acme');

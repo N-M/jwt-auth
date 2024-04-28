@@ -11,10 +11,13 @@ use Psr\Http\Message\ResponseInterface;
  */
 final class TestErrorHandler
 {
+    /**
+     * @param array{decoded: array<string, mixed>, token: string} $arguments
+     */
     public function __invoke(
         ResponseInterface $response,
         array $arguments
-    ) {
+    ): ResponseInterface {
         $response->getBody()->write(self::class);
 
         return $response
@@ -22,10 +25,13 @@ final class TestErrorHandler
             ->withHeader('X-Foo', 'Bar');
     }
 
+    /**
+     * @param array{decoded: array<string, mixed>, token: string} $arguments
+     */
     public static function error(
         ResponseInterface $response,
         array $arguments
-    ) {
+    ): ResponseInterface {
         $response->getBody()->write(self::class);
 
         return $response

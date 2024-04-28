@@ -22,13 +22,10 @@ use function count;
 final class FirebaseDecoder implements DecoderInterface
 {
     /**
-     * @var key|Key[]
+     * @var array<string, Key>|Key[]
      */
-    private array|Key $keys = [];
+    private array $keys = [];
 
-    /**
-     * @param Secret[] $secrets
-     */
     public function __construct(Secret ...$secrets)
     {
         foreach ($secrets as $secret) {
@@ -39,16 +36,17 @@ final class FirebaseDecoder implements DecoderInterface
                 $this->keys[$secret->kid] = $key;
             }
         }
-
-        if (count($this->keys) === 1) {
-            $this->keys = current($this->keys);
-        }
     }
 
     public function decode(string $jwt): array
     {
         try {
-            return (array) JWT::decode($jwt, $this->keys);
+            $keys = $this->keys;
+            if (count($this->keys) === 1) {
+                $keys = current($this->keys);
+            }
+
+            return (array) JWT::decode($jwt, $keys);
         } catch (InvalidArgumentException $e) {
             throw $e;
             // provided key/key-array is empty or malformed.

@@ -8,6 +8,9 @@ use Closure;
 
 final class Options
 {
+    /**
+     * @param string[] $relaxed
+     */
     public function __construct(
         public readonly bool $isSecure = true,
         public readonly array $relaxed = ['localhost', '127.0.0.1', '::1'],
