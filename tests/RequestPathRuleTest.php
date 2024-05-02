@@ -1,7 +1,10 @@
 <?php
 
-namespace JimTools\JwtAuth\JwtAuthentication;
+declare(strict_types=1);
 
+namespace JimTools\JwtAuth\Test;
+
+use JimTools\JwtAuth\Rules\RequestPathRule;
 use Laminas\Diactoros\ServerRequestFactory;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;

@@ -6,9 +6,9 @@ namespace JimTools\JwtAuth;
 
 use JimTools\JwtAuth\Decoder\DecoderInterface;
 use JimTools\JwtAuth\Exceptions\AuthorizationException;
-use JimTools\JwtAuth\JwtAuthentication\RequestMethodRule;
-use JimTools\JwtAuth\JwtAuthentication\RequestPathRule;
-use JimTools\JwtAuth\JwtAuthentication\RuleInterface;
+use JimTools\JwtAuth\Rules\RequestMethodRule;
+use JimTools\JwtAuth\Rules\RequestPathRule;
+use JimTools\JwtAuth\Rules\RuleInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;

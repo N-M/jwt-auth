@@ -1,6 +1,8 @@
 <?php
 
-namespace JimTools\JwtAuth;
+declare(strict_types=1);
+
+namespace JimTools\JwtAuth\Test;
 
 use Closure;
 use DateTimeImmutable;
@@ -11,8 +13,11 @@ use JimTools\JwtAuth\Decoder\FirebaseDecoder;
 use JimTools\JwtAuth\Exceptions\AuthorizationException;
 use JimTools\JwtAuth\Handlers\AfterHandlerInterface;
 use JimTools\JwtAuth\Handlers\BeforeHandlerInterface;
-use JimTools\JwtAuth\JwtAuthentication\RequestMethodRule;
-use JimTools\JwtAuth\JwtAuthentication\RequestPathRule;
+use JimTools\JwtAuth\JwtAuthentication;
+use JimTools\JwtAuth\Options;
+use JimTools\JwtAuth\Rules\RequestMethodRule;
+use JimTools\JwtAuth\Rules\RequestPathRule;
+use JimTools\JwtAuth\Secret;
 use Laminas\Diactoros\ResponseFactory;
 use Laminas\Diactoros\ServerRequestFactory;
 use Override;
@@ -471,7 +476,7 @@ final class JwtAuthenticationTest extends TestCase
         $response = $collection->dispatch($request, $default);
 
         /** @var array{decoded: array<string, mixed>, token: string} */
-        $data = json_decode($response->getBody(), true);
+        $data = json_decode((string) $response->getBody(), true);
 
         self::assertSame(200, $response->getStatusCode());
         self::assertSame(self::$acmeTokenArray, (array) $data['decoded']);

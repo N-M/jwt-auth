@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace JimTools\JwtAuth\JwtAuthentication;
+namespace JimTools\JwtAuth\Test;
 
 use JimTools\JwtAuth\Secret;
 use PHPUnit\Framework\Attributes\CoversClass;

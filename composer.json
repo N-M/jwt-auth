@@ -42,6 +42,11 @@
             "JimTools\\JwtAuth\\": "src"
         }
     },
+    "autoload-dev": {
+        "psr-4": {
+            "JimTools\\JwtAuth\\Test\\": "tests"
+        }
+    },
     "replace": {
         "tuupola/slim-jwt-auth": "*"
     }

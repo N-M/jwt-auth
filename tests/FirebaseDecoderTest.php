@@ -1,6 +1,8 @@
 <?php
 
-namespace JimTools\JwtAuth;
+declare(strict_types=1);
+
+namespace JimTools\JwtAuth\Test;
 
 use DateTime;
 use DomainException;
@@ -12,6 +14,7 @@ use JimTools\JwtAuth\Decoder\FirebaseDecoder;
 use JimTools\JwtAuth\Exceptions\BeforeValidException;
 use JimTools\JwtAuth\Exceptions\ExpiredException;
 use JimTools\JwtAuth\Exceptions\SignatureInvalidException;
+use JimTools\JwtAuth\Secret;
 use Override;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;

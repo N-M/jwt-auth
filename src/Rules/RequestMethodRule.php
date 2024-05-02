@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace JimTools\JwtAuth\JwtAuthentication;
+namespace JimTools\JwtAuth\Rules;
 
 use Psr\Http\Message\ServerRequestInterface;
 
