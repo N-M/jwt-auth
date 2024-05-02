@@ -1,6 +1,6 @@
 <?php
 
-namespace Tuupola\Middleware\JwtAuthentication;
+namespace JimTools\JwtAuth\JwtAuthentication;
 
 use Laminas\Diactoros\ServerRequestFactory;
 use PHPUnit\Framework\Attributes\CoversClass;

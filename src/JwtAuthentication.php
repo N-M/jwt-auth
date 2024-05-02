@@ -2,8 +2,13 @@
 
 declare(strict_types=1);
 
-namespace Tuupola\Middleware;
+namespace JimTools\JwtAuth;
 
+use JimTools\JwtAuth\Decoder\DecoderInterface;
+use JimTools\JwtAuth\Exceptions\AuthorizationException;
+use JimTools\JwtAuth\JwtAuthentication\RequestMethodRule;
+use JimTools\JwtAuth\JwtAuthentication\RequestPathRule;
+use JimTools\JwtAuth\JwtAuthentication\RuleInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
@@ -11,11 +16,7 @@ use Psr\Http\Server\RequestHandlerInterface;
 use RuntimeException;
 use SplStack;
 use Throwable;
-use Tuupola\Middleware\Decoder\DecoderInterface;
-use Tuupola\Middleware\Exceptions\AuthorizationException;
-use Tuupola\Middleware\JwtAuthentication\RequestMethodRule;
-use Tuupola\Middleware\JwtAuthentication\RequestPathRule;
-use Tuupola\Middleware\JwtAuthentication\RuleInterface;
+use Tuupola\Middleware\DoublePassTrait;
 
 use function in_array;
 use function is_callable;

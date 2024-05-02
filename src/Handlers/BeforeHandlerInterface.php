@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Tuupola\Middleware\Handlers;
+namespace JimTools\JwtAuth\Handlers;
 
 use Psr\Http\Message\ServerRequestInterface;
 

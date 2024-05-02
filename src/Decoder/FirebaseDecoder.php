@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Tuupola\Middleware\Decoder;
+namespace JimTools\JwtAuth\Decoder;
 
 use DomainException;
 use Firebase\JWT\BeforeValidException as JwtBeforeValidException;
@@ -11,10 +11,10 @@ use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
 use Firebase\JWT\SignatureInvalidException as JwtSignatureInvalidException;
 use InvalidArgumentException;
-use Tuupola\Middleware\Exceptions\BeforeValidException;
-use Tuupola\Middleware\Exceptions\ExpiredException;
-use Tuupola\Middleware\Exceptions\SignatureInvalidException;
-use Tuupola\Middleware\Secret;
+use JimTools\JwtAuth\Exceptions\BeforeValidException;
+use JimTools\JwtAuth\Exceptions\ExpiredException;
+use JimTools\JwtAuth\Exceptions\SignatureInvalidException;
+use JimTools\JwtAuth\Secret;
 use UnexpectedValueException;
 
 use function count;

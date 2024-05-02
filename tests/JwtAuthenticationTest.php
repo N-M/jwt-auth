@@ -1,11 +1,18 @@
 <?php
 
-namespace Tuupola\Middleware;
+namespace JimTools\JwtAuth;
 
 use Closure;
 use DateTimeImmutable;
 use Equip\Dispatch\MiddlewareCollection;
 use Firebase\JWT\JWT;
+use JimTools\JwtAuth\Decoder\DecoderInterface;
+use JimTools\JwtAuth\Decoder\FirebaseDecoder;
+use JimTools\JwtAuth\Exceptions\AuthorizationException;
+use JimTools\JwtAuth\Handlers\AfterHandlerInterface;
+use JimTools\JwtAuth\Handlers\BeforeHandlerInterface;
+use JimTools\JwtAuth\JwtAuthentication\RequestMethodRule;
+use JimTools\JwtAuth\JwtAuthentication\RequestPathRule;
 use Laminas\Diactoros\ResponseFactory;
 use Laminas\Diactoros\ServerRequestFactory;
 use Override;
@@ -14,13 +21,6 @@ use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use Tuupola\Middleware\Decoder\DecoderInterface;
-use Tuupola\Middleware\Decoder\FirebaseDecoder;
-use Tuupola\Middleware\Exceptions\AuthorizationException;
-use Tuupola\Middleware\Handlers\AfterHandlerInterface;
-use Tuupola\Middleware\Handlers\BeforeHandlerInterface;
-use Tuupola\Middleware\JwtAuthentication\RequestMethodRule;
-use Tuupola\Middleware\JwtAuthentication\RequestPathRule;
 
 /**
  * @internal

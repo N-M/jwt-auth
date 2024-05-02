@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace Tuupola\Middleware\Decoder;
+namespace JimTools\JwtAuth\Decoder;
 
 use DomainException;
 use InvalidArgumentException;
-use Tuupola\Middleware\Exceptions\BeforeValidException;
-use Tuupola\Middleware\Exceptions\ExpiredException;
-use Tuupola\Middleware\Exceptions\SignatureInvalidException;
+use JimTools\JwtAuth\Exceptions\BeforeValidException;
+use JimTools\JwtAuth\Exceptions\ExpiredException;
+use JimTools\JwtAuth\Exceptions\SignatureInvalidException;
 use UnexpectedValueException;
 
 interface DecoderInterface

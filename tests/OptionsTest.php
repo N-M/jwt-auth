@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Tuupola\Middleware;
+namespace JimTools\JwtAuth;
 
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;

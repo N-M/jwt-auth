@@ -1,22 +1,22 @@
 <?php
 
-namespace Tuupola\Middleware;
+namespace JimTools\JwtAuth;
 
 use DateTime;
 use DomainException;
 use Firebase\JWT\JWT;
 use Generator;
 use InvalidArgumentException;
+use JimTools\JwtAuth\Decoder\DecoderInterface;
+use JimTools\JwtAuth\Decoder\FirebaseDecoder;
+use JimTools\JwtAuth\Exceptions\BeforeValidException;
+use JimTools\JwtAuth\Exceptions\ExpiredException;
+use JimTools\JwtAuth\Exceptions\SignatureInvalidException;
 use Override;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
-use Tuupola\Middleware\Decoder\DecoderInterface;
-use Tuupola\Middleware\Decoder\FirebaseDecoder;
-use Tuupola\Middleware\Exceptions\BeforeValidException;
-use Tuupola\Middleware\Exceptions\ExpiredException;
-use Tuupola\Middleware\Exceptions\SignatureInvalidException;
 use UnexpectedValueException;
 
 /**

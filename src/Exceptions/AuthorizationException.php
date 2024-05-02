@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Tuupola\Middleware\Exceptions;
+namespace JimTools\JwtAuth\Exceptions;
 
 use RuntimeException;
 

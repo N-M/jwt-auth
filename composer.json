@@ -39,12 +39,7 @@
     },
     "autoload": {
         "psr-4": {
-            "Tuupola\\Middleware\\": "src"
-        }
-    },
-    "autoload-dev": {
-        "psr-4": {
-            "Tuupola\\Middleware\\": "tests"
+            "JimTools\\JwtAuth\\": "src"
         }
     },
     "replace": {

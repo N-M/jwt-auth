@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Tuupola\Middleware;
+namespace JimTools\JwtAuth;
 
-use Tuupola\Middleware\Handlers\AfterHandlerInterface;
-use Tuupola\Middleware\Handlers\BeforeHandlerInterface;
+use JimTools\JwtAuth\Handlers\AfterHandlerInterface;
+use JimTools\JwtAuth\Handlers\BeforeHandlerInterface;
 
 final class Options
 {

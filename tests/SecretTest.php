@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Tuupola\Middleware\JwtAuthentication;
+namespace JimTools\JwtAuth\JwtAuthentication;
 
+use JimTools\JwtAuth\Secret;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
-use Tuupola\Middleware\Secret;
 
 /**
  * @internal
