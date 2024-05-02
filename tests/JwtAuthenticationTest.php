@@ -13,7 +13,7 @@ use JimTools\JwtAuth\Decoder\FirebaseDecoder;
 use JimTools\JwtAuth\Exceptions\AuthorizationException;
 use JimTools\JwtAuth\Handlers\AfterHandlerInterface;
 use JimTools\JwtAuth\Handlers\BeforeHandlerInterface;
-use JimTools\JwtAuth\JwtAuthentication;
+use JimTools\JwtAuth\Middleware\JwtAuthentication;
 use JimTools\JwtAuth\Options;
 use JimTools\JwtAuth\Rules\RequestMethodRule;
 use JimTools\JwtAuth\Rules\RequestPathRule;

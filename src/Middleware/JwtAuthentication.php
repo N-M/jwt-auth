@@ -2,10 +2,11 @@
 
 declare(strict_types=1);
 
-namespace JimTools\JwtAuth;
+namespace JimTools\JwtAuth\Middleware;
 
 use JimTools\JwtAuth\Decoder\DecoderInterface;
 use JimTools\JwtAuth\Exceptions\AuthorizationException;
+use JimTools\JwtAuth\Options;
 use JimTools\JwtAuth\Rules\RequestMethodRule;
 use JimTools\JwtAuth\Rules\RequestPathRule;
 use JimTools\JwtAuth\Rules\RuleInterface;
