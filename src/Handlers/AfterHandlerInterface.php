@@ -9,7 +9,7 @@ use Psr\Http\Message\ResponseInterface;
 interface AfterHandlerInterface
 {
     /**
-     * @param array{decoded: array<string, mixed>, token: string}|array{uri: string, message: string} $arguments
+     * @param array{decoded: array<string, mixed>, token: string} $arguments
      */
     public function __invoke(ResponseInterface $response, array $arguments): ResponseInterface;
 }

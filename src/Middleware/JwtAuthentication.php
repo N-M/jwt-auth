@@ -101,11 +101,8 @@ final class JwtAuthentication implements MiddlewareInterface
 
         // Modify $request before calling next middleware.
         $before = $this->options->before;
-        if (is_callable($before)) {
-            $beforeRequest = $before($request, $params);
-            if ($beforeRequest instanceof ServerRequestInterface) {
-                $request = $beforeRequest;
-            }
+        if ($before !== null) {
+            $request = $beforeRequest;
         }
 
         // Everything ok, call next middleware.
@@ -113,11 +110,8 @@ final class JwtAuthentication implements MiddlewareInterface
 
         // Modify $response before returning.
         $after = $this->options->after;
-        if (is_callable($after)) {
-            $afterResponse = $after($response, $params);
-            if ($afterResponse instanceof ResponseInterface) {
-                return $afterResponse;
-            }
+        if ($after !== null) {
+            return $after($response, $params);
         }
 
         return $response;
