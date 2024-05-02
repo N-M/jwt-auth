@@ -60,24 +60,11 @@ final class JwtAuthentication implements MiddlewareInterface
      */
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
     {
-        $scheme = $request->getUri()->getScheme();
-        $host = $request->getUri()->getHost();
+        $this->allowInsecure();
 
         // If rules say we should not authenticate call next and return.
         if (false === $this->shouldAuthenticate($request)) {
             return $handler->handle($request);
-        }
-
-        // HTTP allowed only if secure is false or server is in relaxed array.
-        if ('https' !== $scheme && true === $this->options->isSecure) {
-            if (!in_array($host, $this->options->relaxed, true)) {
-                $message = sprintf(
-                    'Insecure use of middleware over %s denied by configuration.',
-                    strtoupper($scheme)
-                );
-
-                throw new RuntimeException($message);
-            }
         }
 
         // If token cannot be found or decoded return with 401 Unauthorized.
@@ -189,5 +176,24 @@ final class JwtAuthentication implements MiddlewareInterface
         }
 
         throw AuthorizationException::noTokenFound();
+    }
+
+    /**
+     * @throws RuntimeException
+     */
+    private function allowInsecure(): void
+    {
+        $scheme = $request->getUri()->getScheme();
+        $host = $request->getUri()->getHost();
+        if ('https' !== $scheme && true === $this->options->isSecure) {
+            if (!in_array($host, $this->options->relaxed, true)) {
+                $message = sprintf(
+                    'Insecure use of middleware over %s denied by configuration.',
+                    strtoupper($scheme)
+                );
+
+                throw new RuntimeException($message);
+            }
+        }
     }
 }
