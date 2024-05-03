@@ -20,7 +20,6 @@ use Throwable;
 use Tuupola\Middleware\DoublePassTrait;
 
 use function in_array;
-use function is_callable;
 
 final class JwtAuthentication implements MiddlewareInterface
 {
@@ -60,14 +59,13 @@ final class JwtAuthentication implements MiddlewareInterface
      */
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
     {
-        $this->allowInsecure();
-
         // If rules say we should not authenticate call next and return.
         if (false === $this->shouldAuthenticate($request)) {
             return $handler->handle($request);
         }
 
-        // If token cannot be found or decoded return with 401 Unauthorized.
+        $this->checkSecureConfig($request);
+
         $token = $this->fetchToken($request);
 
         try {
@@ -89,7 +87,7 @@ final class JwtAuthentication implements MiddlewareInterface
         // Modify $request before calling next middleware.
         $before = $this->options->before;
         if ($before !== null) {
-            $request = $beforeRequest;
+            $request = $before($request, $params);
         }
 
         // Everything ok, call next middleware.
@@ -181,7 +179,7 @@ final class JwtAuthentication implements MiddlewareInterface
     /**
      * @throws RuntimeException
      */
-    private function allowInsecure(): void
+    private function checkSecureConfig(ServerRequestInterface $request): void
     {
         $scheme = $request->getUri()->getScheme();
         $host = $request->getUri()->getHost();
