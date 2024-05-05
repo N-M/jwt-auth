@@ -6,6 +6,9 @@ namespace JimTools\JwtAuth;
 
 use SensitiveParameter;
 
+/**
+ * @codeCoverageIgnore
+ */
 final class Secret
 {
     public function __construct(

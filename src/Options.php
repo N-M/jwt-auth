@@ -7,6 +7,9 @@ namespace JimTools\JwtAuth;
 use JimTools\JwtAuth\Handlers\AfterHandlerInterface;
 use JimTools\JwtAuth\Handlers\BeforeHandlerInterface;
 
+/**
+ * @codeCoverageIgnore
+ */
 final class Options
 {
     /**
@@ -21,6 +24,5 @@ final class Options
         public readonly ?string $attribute = 'token',
         public ?BeforeHandlerInterface $before = null,
         public ?AfterHandlerInterface $after = null,
-        public ?AfterHandlerInterface $error = null,
     ) {}
 }
