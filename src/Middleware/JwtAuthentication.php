@@ -104,10 +104,8 @@ final class JwtAuthentication implements MiddlewareInterface
 
     /**
      * Set all rules in the stack.
-     *
-     * @param RuleInterface[] $rules
      */
-    public function withRules(array $rules): self
+    public function withRules(RuleInterface ...$rules): self
     {
         $new = clone $this;
         $new->rules = new SplStack();
@@ -122,11 +120,11 @@ final class JwtAuthentication implements MiddlewareInterface
     /**
      * Add a rule to the stack.
      */
-    public function addRule(callable $callable): self
+    public function addRule(RuleInterface $rule): self
     {
         $new = clone $this;
         $new->rules = clone $this->rules;
-        $new->rules->push($callable);
+        $new->rules->push($rule);
 
         return $new;
     }

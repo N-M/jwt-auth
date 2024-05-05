@@ -26,6 +26,7 @@ use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use RuntimeException;
 
 /**
  * @internal
@@ -310,7 +311,7 @@ final class JwtAuthenticationTest extends TestCase
 
     public function testShouldNotAllowInsecure(): void
     {
-        $this->expectException('RuntimeException');
+        $this->expectException(RuntimeException::class);
 
         $request = (new ServerRequestFactory())
             ->createServerRequest('GET', 'http://example.com/api')
@@ -431,9 +432,6 @@ final class JwtAuthenticationTest extends TestCase
         $request = (new ServerRequestFactory())
             ->createServerRequest('GET', 'https://example.com/api')
             ->withHeader('Authorization', 'Bearer ' . self::$acmeToken);
-
-        $decoded = null;
-        $token = null;
 
         $collection = new MiddlewareCollection([
             new JwtAuthentication(
@@ -631,6 +629,47 @@ final class JwtAuthenticationTest extends TestCase
 
         $response = $collection->dispatch($request, $this->defaultclosure());
 
+        self::assertSame(200, $response->getStatusCode());
+        self::assertSame('Success', (string) $response->getBody());
+    }
+
+    public function testAddRule(): void
+    {
+        $class = $this->middleware->addRule(new RequestPathRule([], ['/foobar']));
+        $collection = new MiddlewareCollection([$class]);
+
+        $request = (new ServerRequestFactory())
+            ->createServerRequest('GET', 'https://example.com/foo');
+
+        $response = $collection->dispatch($request, $this->defaultClosure());
+
+        self::assertSame(200, $response->getStatusCode());
+        self::assertSame('Success', (string) $response->getBody());
+    }
+
+    public function testWithRule(): void
+    {
+        $collection = new MiddlewareCollection([
+            $this->middleware->withRules(new RequestPathRule(['/admin'], ['/admin/ping'])),
+        ]);
+
+        $request = (new ServerRequestFactory())
+            ->createServerRequest('GET', 'https://example.com');
+
+        $response = $collection->dispatch($request, $this->defaultClosure());
+        self::assertSame(200, $response->getStatusCode());
+        self::assertSame('Success', (string) $response->getBody());
+
+        $request = (new ServerRequestFactory())
+            ->createServerRequest('GET', 'https://example.com/admin')
+            ->withHeader('Authorization', 'Bearer ' . self::$acmeToken);
+        $response = $collection->dispatch($request, $this->defaultClosure());
+        self::assertSame(200, $response->getStatusCode());
+        self::assertSame('Success', (string) $response->getBody());
+
+        $request = (new ServerRequestFactory())
+            ->createServerRequest('GET', 'https://example.com/admin/ping');
+        $response = $collection->dispatch($request, $this->defaultClosure());
         self::assertSame(200, $response->getStatusCode());
         self::assertSame('Success', (string) $response->getBody());
     }
