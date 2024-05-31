@@ -1,22 +1,22 @@
-.. jwt-auth documentation master file, created by
-   sphinx-quickstart on Sat Jun  1 00:08:17 2024.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
+.. title:: JWT-Auth, JWT Authentication Middlewrae
 
-Welcome to jwt-auth's documentation!
-====================================
+======================
+JWT-Auth Documentation
+======================
 
-WHY!
+JWT-Auth is a simple middleware which implements JSON Web Token Authentication
+that is PSR-15 compliant.
+
+JWT-Auth does not implement an OAuth 2.0 authorization server nor does it
+provide ways to generate, issue or store authentication tokens. It only parses
+and authenticates a token when passed via header or cookie. This is useful for
+example when you want to use `JSON Web Tokens as API keys <https://auth0.com/blog/2014/12/02/using-json-web-tokens-as-api-keys/>`_.
+
+User Guide
+==========
 
 .. toctree::
-   :maxdepth: 2
-   :caption: Contents:
+  :maxdepth: 3
 
-
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
+  overview
+  quickstart
