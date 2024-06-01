@@ -20,3 +20,4 @@ User Guide
 
   overview
   quickstart
+  options

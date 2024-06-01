@@ -33,7 +33,8 @@ followed by the token i.e. ``Bearer xx.yy.zz``
   $errorMiddleware = $app->addErrorMiddleware(true, true, true);
 
   // Register Authentication Middleware
-  $authentication = new JwtAuthentication(new Options(), new FirebaseDecoder());
+  $decoder = new FirebaseDecoder(new Secret($_ENV['JWT_SECRET'], 'HS256'));
+  $authentication = new JwtAuthentication(new Options(), $decoder);
   $app->addMiddleware($authentication);
 
   $app->get('/hello/{name}', function (Request $request, Response $response, $args) {
@@ -63,7 +64,8 @@ specify which routes to authentication. the third argumet should be an array of
   ]
 
   // Register Authentication Middleware
-  $authentication = new JwtAuthentication(new Options(), new FirebaseDecoder(), $rules);
+  $decoder = new FirebaseDecoder(new Secret($_ENV['JWT_SECRET'], 'HS256'));
+  $authentication = new JwtAuthentication(new Options(), $decoder, $rules);
   $app->addMiddleware($authentication);
 
 
