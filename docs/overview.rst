@@ -74,8 +74,8 @@ First off, thanks for taking the time to contribute!
 Guidelines
 ----------
 
-1. Use php-cs-fixer and phpstan
-2. All pull requests must include unit tests to ensure the change works as
+#. Use php-cs-fixer and phpstan
+#. All pull requests must include unit tests to ensure the change works as
    expected and to prevent regressions.
 
 Running the tests
