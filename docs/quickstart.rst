@@ -104,3 +104,22 @@ string literal or a regular expression for example.
 
 .. note::
   All regular expressions are **not** treated as case insensative.
+
+Multiple Tokens
+===============
+
+If you need to parse multiple token from different source it's possible, all you
+need to do is pass multiple secrts to the to the decoder see the below example.
+
+.. code-block:: php
+
+  $decoder = new FirebaseDecoder(
+    new Secret($_ENV['JWT_ALPHA_SECRET'], 'HS256', 'alpha'),
+    new Secret($_ENV['JWT_BETA_SECRET'], 'HS256', 'beta'),
+  );
+  $authentication = new JwtAuthentication(new Options(), $decoder);
+
+.. warning::
+  when multiple secrets are passsed the ``kid`` is required in the token header
+  and in the ``Secret`` class. The kid is used by the decoder to determine which
+  secret to use to decode the JWT.

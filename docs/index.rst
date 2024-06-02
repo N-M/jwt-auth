@@ -21,3 +21,4 @@ User Guide
   overview
   quickstart
   options
+  decoder
