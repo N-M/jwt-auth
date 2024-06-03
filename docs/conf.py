@@ -14,10 +14,12 @@ release = '2.0'
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
-extensions = ['sphinx.ext.githubpages']
+extensions = [
+    'sphinx.ext.githubpages',
+    'sphinx_multiversion',
+]
 templates_path = ['_templates']
 exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store', 'bin', 'lib']
-
 language = 'en'
 
 # -- Options for HTML output -------------------------------------------------
@@ -26,3 +28,6 @@ language = 'en'
 html_theme = 'sphinx_rtd_theme'
 html_static_path = ['_static']
 html_baseurl = ''
+html_sidebars = {
+    '**': ['versions.html'],
+}
