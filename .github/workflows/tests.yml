@@ -5,13 +5,12 @@ on:
       - main
       - 2.x
   pull_request:
-permissions:
-  contents: read
-  pages: write
-  id-token: write
+  workflow_dispatch:
+
 concurrency:
   group: "pages"
   cancel-in-progress: false
+
 jobs:
   build:
     strategy:
@@ -44,8 +43,8 @@ jobs:
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           slug: jimtools/jwt-auth
+
   docs:
-    needs: build
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -69,12 +68,22 @@ jobs:
           path: './pages'
   deploy:
     needs: docs
+
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
+
     runs-on: ubuntu-latest
+
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
 
