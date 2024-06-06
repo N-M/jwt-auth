@@ -1,5 +1,9 @@
 ---
-# "1.x":
-#   tag: "main",
-#   languages:
-#     - "en"
+"latest":
+  tag: "better-docs"
+  languages:
+    - "en"
+"2.0":
+  tag: "better-docs"
+  languages:
+    - "en"

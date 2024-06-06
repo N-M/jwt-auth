@@ -4,14 +4,18 @@ import yaml
 def main():
   # to separate a single local build from all builds we have a flag, see conf.py
   os.environ["build_all_docs"] = str(True)
+  os.environ["pages_root"] = os.environ.get("GITHUB_PAGES")
 
   # manually the main branch build in the current supported languages
-  build_doc("latest", "en", "better-docs")
+  build_doc("latest", "en", "better-docs") # @todo update later
   move_dir("./_build/html/", "../pages/")
 
   # reading the yaml file
   with open("versions.yaml", "r") as yaml_file:
     docs = yaml.safe_load(yaml_file)
+
+  if(docs is None):
+    return
 
   # and looping over all values to call our build with version, language and its tag
   for version, details in docs.items():
