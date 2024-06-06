@@ -47,14 +47,28 @@ pages_root = os.environ.get("pages_root", "")
 
 html_context = {
   "current_language": current_language,
-  "languages": [],
+  "languages": [
+     {"name": 'en', "url": pages_root},
+  ],
   "current_version": { "name": current_version },
-  "versions": [],
+  "versions": {
+     "tags": [],
+     "branches": [
+        {"name": "latest", "url": "/"},
+     ]
+  }
 }
 
 with open("versions.yaml", "r") as yaml_file:
     docs = yaml.safe_load(yaml_file)
     for language in docs[current_version].get('languages', []):
-      html_context['languages'].append([language, pages_root+'/'+current_version+'/'+language])
+
+      html_context['languages'].append({
+         "name": language,
+         "url": pages_root+'/'+current_version+'/'+language,
+      })
       for version, details in docs.items():
-        html_context['versions'].append([version, pages_root+'/'+version+'/'+current_language])
+        html_context['versions']['tags'].append({
+           "name": version,
+           "url": pages_root+'/'+version+'/'+current_language,
+        })

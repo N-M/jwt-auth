@@ -6,8 +6,8 @@ def main():
   os.environ["build_all_docs"] = str(True)
 
   # manually the main branch build in the current supported languages
-  # build_doc("latest", "en", "better-docs")
-  # move_dir("./_build/html/", "../pages/")
+  build_doc("latest", "en", "better-docs")
+  move_dir("./_build/html/", "../pages/")
 
   # reading the yaml file
   with open("versions.yaml", "r") as yaml_file:
@@ -26,8 +26,8 @@ def build_doc(version, language, tag):
     os.environ["current_version"] = version
     os.environ["current_language"] = language
     subprocess.run("git checkout " + tag, shell=True)
-    subprocess.run("git checkout better-docs -- conf.py", shell=True)
-    subprocess.run("git checkout better-docs -- versions.yaml", shell=True)
+    subprocess.run("git checkout better-docs -- conf.py", shell=True) # @todo update with 2.x later
+    subprocess.run("git checkout better-docs -- versions.yaml", shell=True) # @todo update with 2.x later
     subprocess.run("doxygen Doxyfile", shell=True)
     os.environ['SPHINXOPTS'] = "-D language='{}'".format(language)
     subprocess.run("make html", shell=True)
