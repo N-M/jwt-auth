@@ -45,6 +45,7 @@ License
 
 Licensed using the `MIT license <https://opensource.org/licenses/MIT>`_.
 
+    Copyright (c) 2015-2022 Mika Tuupola
     Copyright (c) 2024 James Read <https://github.com/jimtools>
 
     Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -87,6 +88,14 @@ Running the tests
 
 Reporting a security vulnerability
 ==================================
+
+We want to ensure that JWT-Auth is a secure library for everyone. If you've
+discovered a security vulnerability in the library, we appreciate your help in
+disclosing it to us in a
+`responsible manner <https://en.wikipedia.org/wiki/Responsible_disclosure>`_. If
+you've discovered a security concern, please email us at
+james.reaed.18@gmail.com. We'll work with you to make sure that we understand
+the scope of the issue, and that we fully address your concern.
 
 After a security vulnerability has been corrected, a security hotfix release will
 be deployed as soon as possible.
