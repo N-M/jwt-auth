@@ -1,0 +1,204 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2024, James Read
+# This file is distributed under the same license as the jwt-auth package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2024.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: jwt-auth \n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2024-06-03 22:20+0800\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: zh\n"
+"Language-Team: zh <LL@li.org>\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.15.0\n"
+
+#: ../../decoder.rst:3
+msgid "Decoder"
+msgstr ""
+
+#: ../../decoder.rst:5
+msgid ""
+"By default JWT-Auth ships with a jwt decode this is based on the "
+"`Firebase JWT <https://github.com/firebase/php-jwt>`_ libary this will "
+"cover most common uses."
+msgstr ""
+
+#: ../../decoder.rst:14
+msgid "Secret"
+msgstr ""
+
+#: ../../decoder.rst:16
+msgid "The decoder expects at least one secret, but can be passed multiples"
+msgstr ""
+
+#: ../../decoder.rst:24
+msgid "secret"
+msgstr ""
+
+#: ../../decoder.rst
+msgid "Summary"
+msgstr ""
+
+#: ../../decoder.rst:25
+msgid "the secret to decode the token"
+msgstr ""
+
+#: ../../decoder.rst
+msgid "Types"
+msgstr ""
+
+#: ../../decoder.rst:26 ../../decoder.rst:32
+msgid "string"
+msgstr ""
+
+#: ../../decoder.rst
+msgid "Default"
+msgstr ""
+
+#: ../../decoder.rst:27 ../../decoder.rst:33
+msgid "``none``"
+msgstr ""
+
+#: ../../decoder.rst:30
+msgid "algorithm"
+msgstr ""
+
+#: ../../decoder.rst:31
+msgid "the algorithm which the token is encrypted with"
+msgstr ""
+
+#: ../../decoder.rst:36
+msgid "kid"
+msgstr ""
+
+#: ../../decoder.rst:38
+msgid "the kid of the token"
+msgstr ""
+
+#: ../../decoder.rst:39
+msgid "string|null"
+msgstr ""
+
+#: ../../decoder.rst:40
+msgid "``null``"
+msgstr ""
+
+#: ../../decoder.rst:42
+msgid ""
+"the ``kid`` is used when multiple secrets are provided, this is for the "
+"decoder to work out which secret to use for the token."
+msgstr ""
+
+#: ../../decoder.rst:47
+msgid "when only using a signular algorithm and secret you can leave this as null"
+msgstr ""
+
+#: ../../decoder.rst:50
+msgid "Excptions"
+msgstr ""
+
+#: ../../decoder.rst:52
+msgid ""
+"If the decoder cannnot decode the token it will throw one of several "
+"exception."
+msgstr ""
+
+#: ../../decoder.rst:55
+msgid "InvalidArgumentException"
+msgstr ""
+
+#: ../../decoder.rst:57
+msgid "the provided secret or array of secret is empty or malformed."
+msgstr ""
+
+#: ../../decoder.rst:60
+msgid "DomainException"
+msgstr ""
+
+#: ../../decoder.rst:62
+msgid "this can be for several reasons"
+msgstr ""
+
+#: ../../decoder.rst:64
+msgid "provided algorithm is unsupported OR"
+msgstr ""
+
+#: ../../decoder.rst:65
+msgid "provided key is invalid OR"
+msgstr ""
+
+#: ../../decoder.rst:66
+msgid "unknown error thrown in openSSL or libsodium OR"
+msgstr ""
+
+#: ../../decoder.rst:67
+msgid "libsodium is required but not available."
+msgstr ""
+
+#: ../../decoder.rst:71
+msgid "SignatureInvalidException"
+msgstr ""
+
+#: ../../decoder.rst:73
+msgid "the signature of the token is malformed."
+msgstr ""
+
+#: ../../decoder.rst:76
+msgid "BeforeValidException"
+msgstr ""
+
+#: ../../decoder.rst:78
+msgid ""
+"the token passed is trying to be used before the valid date or before the"
+" issued at date."
+msgstr ""
+
+#: ../../decoder.rst:82
+msgid "ExpiredException"
+msgstr ""
+
+#: ../../decoder.rst:84
+msgid "The token has expired."
+msgstr ""
+
+#: ../../decoder.rst:87
+msgid "UnexpectedValueException"
+msgstr ""
+
+#: ../../decoder.rst:89
+msgid "this can be throw for one of the following reasons."
+msgstr ""
+
+#: ../../decoder.rst:91
+msgid "provided JWT is malformed OR"
+msgstr ""
+
+#: ../../decoder.rst:92
+msgid "provided JWT is missing an algorithm / using an unsupported algorithm OR"
+msgstr ""
+
+#: ../../decoder.rst:93
+msgid "provided JWT algorithm does not match provided key OR"
+msgstr ""
+
+#: ../../decoder.rst:94
+msgid "provided key ID in key/key-array is empty or invalid."
+msgstr ""
+
+#: ../../decoder.rst:98
+msgid "Customr Decoder"
+msgstr ""
+
+#: ../../decoder.rst:100
+msgid ""
+"If the provided decode doee not meet your needs, you can always create "
+"you own custom decode that impliemnts ``DecoderInterface``"
+msgstr ""
+

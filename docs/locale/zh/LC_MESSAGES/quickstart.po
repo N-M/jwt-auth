@@ -1,0 +1,127 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2024, James Read
+# This file is distributed under the same license as the jwt-auth package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2024.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: jwt-auth \n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2024-06-03 22:20+0800\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: zh\n"
+"Language-Team: zh <LL@li.org>\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.15.0\n"
+
+#: ../../quickstart.rst:3
+msgid "Quickstart"
+msgstr ""
+
+#: ../../quickstart.rst:5
+msgid ""
+"This page provides a quick introduction to JWT-Auth and introductory "
+"examples. If you have not already installed, JWT-Auth, head over to the "
+":ref:`installation` page."
+msgstr ""
+
+#: ../../quickstart.rst:9
+msgid ""
+"This quickstart will use Slim framework as am example but this will work "
+"with any PSR-15 compliant framework."
+msgstr ""
+
+#: ../../quickstart.rst:13
+msgid "Basic Useage"
+msgstr ""
+
+#: ../../quickstart.rst:15
+msgid ""
+"The below example is the most basic use of the middleware, acting as a "
+"global authentication middleware on all routes. by default it will expect"
+" a JWT in the ``Authentication`` header or cookie  named ``token`` "
+"prefixed with **Bearer** followed by the token i.e. ``Bearer xx.yy.zz``"
+msgstr ""
+
+#: ../../quickstart.rst:49
+msgid "Custom Rules"
+msgstr ""
+
+#: ../../quickstart.rst:51
+msgid ""
+"You may not always want a global authentication on all routes this is "
+"where custom rules comes in, the third parameter of ``JwtAuthentication``"
+" allow you to specify which routes to authentication. the third argumet "
+"should be an array of ``JimTools\\JwtAuth\\Rules\\RuleInterface``"
+msgstr ""
+
+#: ../../quickstart.rst:72
+#, python-format
+msgid ""
+"Out of the box there are two rules provided ``RequestMethodRule`` and "
+"``RequestPathRule``, these should cover 90% of all use cases but if you "
+"need fine-grained control you can while your own custom rules which "
+"impliments the ``RuleInterface`` interface."
+msgstr ""
+
+#: ../../quickstart.rst:78
+msgid "RequestMethodRule"
+msgstr ""
+
+#: ../../quickstart.rst:80
+msgid ""
+"This rule allows you bypass all request with a specific HTTP method, by "
+"default it will ignore ``OPTION``, check out `MDN Http Request Methods "
+"<https://developer.mozilla.org/en-US/docs/Web/HTTP/Methods>`_ for more "
+"infomation on methods."
+msgstr ""
+
+#: ../../quickstart.rst:86
+msgid "RequestPathRule"
+msgstr ""
+
+#: ../../quickstart.rst:88
+msgid ""
+"This rule determines which url paths the authentication will action on, "
+"it takes two parameter both expect an array of strings."
+msgstr ""
+
+#: ../../quickstart.rst:91
+msgid ""
+"paths is a list or URI where the authentication will take act on, this "
+"can be a string literal or a regular expression for example."
+msgstr ""
+
+#: ../../quickstart.rst:98
+msgid ""
+"ignore is a list or URI where authentication will be bypassed, this can "
+"by a string literal or a regular expression for example."
+msgstr ""
+
+#: ../../quickstart.rst:106
+msgid "All regular expressions are **not** treated as case insensative."
+msgstr ""
+
+#: ../../quickstart.rst:109
+msgid "Multiple Tokens"
+msgstr ""
+
+#: ../../quickstart.rst:111
+msgid ""
+"If you need to parse multiple token from different source it's possible, "
+"all you need to do is pass multiple secrts to the to the decoder see the "
+"below example."
+msgstr ""
+
+#: ../../quickstart.rst:123
+msgid ""
+"when multiple secrets are passsed the ``kid`` is required in the token "
+"header and in the ``Secret`` class. The kid is used by the decoder to "
+"determine which secret to use to decode the JWT."
+msgstr ""
+

@@ -1,0 +1,141 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2024, James Read
+# This file is distributed under the same license as the jwt-auth package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2024.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: jwt-auth \n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2024-06-03 22:20+0800\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: zh\n"
+"Language-Team: zh <LL@li.org>\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.15.0\n"
+
+#: ../../overview.rst:3
+msgid "Overview"
+msgstr ""
+
+#: ../../overview.rst:6
+msgid "Requirments"
+msgstr ""
+
+#: ../../overview.rst:8
+msgid "PHP 8.1 or greater"
+msgstr ""
+
+#: ../../overview.rst:13
+msgid "Installation"
+msgstr ""
+
+#: ../../overview.rst:15
+msgid ""
+"The recommended way to install JWT-Auth is with composer `Composer "
+"<https://getcomposer.org>`_. Composer is a dependency management tool for"
+" PHP that allows you to declare the dependencies your project needs and "
+"installs them into your project."
+msgstr ""
+
+#: ../../overview.rst:20
+msgid "You can add JWT-Auth as a dependency using Composer:"
+msgstr ""
+
+#: ../../overview.rst:28
+msgid ""
+"If using Apache add the following to the ``.htaccess`` file. Otherwise, "
+"PHP won't have access to the ``Authorization`` header."
+msgstr ""
+
+#: ../../overview.rst:36
+msgid "Upgrading"
+msgstr ""
+
+#: ../../overview.rst:38
+msgid ""
+"The git repository contains an `upgrade guide`__ that details what "
+"changed between the major versions."
+msgstr ""
+
+#: ../../overview.rst:44
+msgid "License"
+msgstr ""
+
+#: ../../overview.rst:46
+msgid "Licensed using the `MIT license <https://opensource.org/licenses/MIT>`_."
+msgstr ""
+
+#: ../../overview.rst:48
+msgid "Copyright (c) 2024 James Read <https://github.com/jimtools>"
+msgstr ""
+
+#: ../../overview.rst:50
+msgid ""
+"Permission is hereby granted, free of charge, to any person obtaining a "
+"copy of this software and associated documentation files (the "
+"\"Software\"), to deal in the Software without restriction, including "
+"without limitation the rights to use, copy, modify, merge, publish, "
+"distribute, sublicense, and/or sell copies of the Software, and to permit"
+" persons to whom the Software is furnished to do so, subject to the "
+"following conditions:"
+msgstr ""
+
+#: ../../overview.rst:57
+msgid ""
+"The above copyright notice and this permission notice shall be included "
+"in all copies or substantial portions of the Software."
+msgstr ""
+
+#: ../../overview.rst:60
+msgid ""
+"THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS"
+" OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF "
+"MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN"
+" NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,"
+" DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR "
+"OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE"
+" USE OR OTHER DEALINGS IN THE SOFTWARE."
+msgstr ""
+
+#: ../../overview.rst:70
+msgid "Contributing"
+msgstr ""
+
+#: ../../overview.rst:72
+msgid "First off, thanks for taking the time to contribute!"
+msgstr ""
+
+#: ../../overview.rst:75
+msgid "Guidelines"
+msgstr ""
+
+#: ../../overview.rst:77
+msgid "Use php-cs-fixer and phpstan"
+msgstr ""
+
+#: ../../overview.rst:78
+msgid ""
+"All pull requests must include unit tests to ensure the change works as "
+"expected and to prevent regressions."
+msgstr ""
+
+#: ../../overview.rst:82
+msgid "Running the tests"
+msgstr ""
+
+#: ../../overview.rst:89
+msgid "Reporting a security vulnerability"
+msgstr ""
+
+#: ../../overview.rst:91
+msgid ""
+"After a security vulnerability has been corrected, a security hotfix "
+"release will be deployed as soon as possible."
+msgstr ""
+

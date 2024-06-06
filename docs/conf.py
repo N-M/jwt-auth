@@ -31,3 +31,15 @@ html_baseurl = ''
 html_sidebars = {
     '**': ['versions.html'],
 }
+
+locale_dirs = ['locale/']   # path is example but recommended.
+gettext_compact = False     # optional.
+
+html_context = {
+    "current_version": {"name": "latest"},
+    "versions": {
+        "tags": [
+          {"name": "2.0", "url": "./latest"},
+        ],
+    },
+}
