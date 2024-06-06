@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Quickstart &mdash; jwt-auth 2.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
+
+  
+    <link rel="canonical" href="https://localhost:3000/quickstart.html" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="_static/documentation_options.js?v=60dbed4a"></script>
+        <script src="_static/doctools.js?v=9a2dae69"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Options" href="options.html" />
+    <link rel="prev" title="Overview" href="overview.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            jwt-auth
+          </a>
+              <div class="version">
+                2.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="overview.html">Overview</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Quickstart</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#basic-useage">Basic Useage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#custom-rules">Custom Rules</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#requestmethodrule">RequestMethodRule</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#requestpathrule">RequestPathRule</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#multiple-tokens">Multiple Tokens</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="options.html">Options</a></li>
+<li class="toctree-l1"><a class="reference internal" href="decoder.html">Decoder</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">jwt-auth</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Quickstart</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/quickstart.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="quickstart">
+<h1>Quickstart<a class="headerlink" href="#quickstart" title="Link to this heading"></a></h1>
+<p>This page provides a quick introduction to JWT-Auth and introductory examples.
+If you have not already installed, JWT-Auth, head over to the
+<a class="reference internal" href="overview.html#installation"><span class="std std-ref">Installation</span></a> page.</p>
+<p>This quickstart will use Slim framework as am example but this will work with
+any PSR-15 compliant framework.</p>
+<section id="basic-useage">
+<h2>Basic Useage<a class="headerlink" href="#basic-useage" title="Link to this heading"></a></h2>
+<p>The below example is the most basic use of the middleware, acting as a global
+authentication middleware on all routes. by default it will expect a JWT in the
+<code class="docutils literal notranslate"><span class="pre">Authentication</span></code> header or cookie  named <code class="docutils literal notranslate"><span class="pre">token</span></code> prefixed with <strong>Bearer</strong>
+followed by the token i.e. <code class="docutils literal notranslate"><span class="pre">Bearer</span> <span class="pre">xx.yy.zz</span></code></p>
+<div class="highlight-php notranslate"><div class="highlight"><pre><span></span><span class="x">use Psr\Http\Message\ResponseInterface as Response;</span>
+<span class="x">use Psr\Http\Message\ServerRequestInterface as Request;</span>
+<span class="x">use Slim\Factory\AppFactory;</span>
+<span class="x">use JimTools\JwtAuth\Middleware\JwtAuthentication;</span>
+<span class="x">use JimTools\JwtAuth\Options;</span>
+
+<span class="x">require __DIR__ . &#39;/../vendor/autoload.php&#39;;</span>
+
+<span class="x">$app = AppFactory::create();</span>
+<span class="x">$app-&gt;addRoutingMiddleware();</span>
+<span class="x">$errorMiddleware = $app-&gt;addErrorMiddleware(true, true, true);</span>
+
+<span class="x">// Register Authentication Middleware</span>
+<span class="x">$decoder = new FirebaseDecoder(new Secret($_ENV[&#39;JWT_SECRET&#39;], &#39;HS256&#39;));</span>
+<span class="x">$authentication = new JwtAuthentication(new Options(), $decoder);</span>
+<span class="x">$app-&gt;addMiddleware($authentication);</span>
+
+<span class="x">$app-&gt;get(&#39;/hello/{name}&#39;, function (Request $request, Response $response, $args) {</span>
+<span class="x">    $name = $args[&#39;name&#39;];</span>
+<span class="x">    $response-&gt;getBody()-&gt;write(&quot;Hello, $name&quot;);</span>
+<span class="x">    return $response;</span>
+<span class="x">});</span>
+
+<span class="x">$app-&gt;run();</span>
+</pre></div>
+</div>
+</section>
+<section id="custom-rules">
+<h2>Custom Rules<a class="headerlink" href="#custom-rules" title="Link to this heading"></a></h2>
+<p>You may not always want a global authentication on all routes this is where
+custom rules comes in, the third parameter of <code class="docutils literal notranslate"><span class="pre">JwtAuthentication</span></code> allow you to
+specify which routes to authentication. the third argumet should be an array of
+<code class="docutils literal notranslate"><span class="pre">JimTools\JwtAuth\Rules\RuleInterface</span></code></p>
+<div class="highlight-php notranslate"><div class="highlight"><pre><span></span><span class="x">use JimTools\JwtAuth\Rules\RequestMethodRule;</span>
+<span class="x">use JimTools\JwtAuth\Rules\RequestPathRule;</span>
+
+<span class="x">$rules = [</span>
+<span class="x">  new RequestMethodRule(ignore: [&#39;OPTIONS&#39;]),</span>
+<span class="x">  new RequestPathRule(paths: [&#39;/&#39;], ignore: [&#39;/auth/login&#39;])</span>
+<span class="x">]</span>
+
+<span class="x">// Register Authentication Middleware</span>
+<span class="x">$decoder = new FirebaseDecoder(new Secret($_ENV[&#39;JWT_SECRET&#39;], &#39;HS256&#39;));</span>
+<span class="x">$authentication = new JwtAuthentication(new Options(), $decoder, $rules);</span>
+<span class="x">$app-&gt;addMiddleware($authentication);</span>
+</pre></div>
+</div>
+<p>Out of the box there are two rules provided <code class="docutils literal notranslate"><span class="pre">RequestMethodRule</span></code> and
+<code class="docutils literal notranslate"><span class="pre">RequestPathRule</span></code>, these should cover 90% of all use cases but if you need
+fine-grained control you can while your own custom rules which impliments
+the <code class="docutils literal notranslate"><span class="pre">RuleInterface</span></code> interface.</p>
+<section id="requestmethodrule">
+<h3>RequestMethodRule<a class="headerlink" href="#requestmethodrule" title="Link to this heading"></a></h3>
+<p>This rule allows you bypass all request with a specific HTTP method, by default
+it will ignore <code class="docutils literal notranslate"><span class="pre">OPTION</span></code>, check out
+<a class="reference external" href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Methods">MDN Http Request Methods</a>
+for more infomation on methods.</p>
+</section>
+<section id="requestpathrule">
+<h3>RequestPathRule<a class="headerlink" href="#requestpathrule" title="Link to this heading"></a></h3>
+<p>This rule determines which url paths the authentication will action on, it takes
+two parameter both expect an array of strings.</p>
+<p>paths is a list or URI where the authentication will take act on, this can be a
+string literal or a regular expression for example.</p>
+<div class="highlight-php notranslate"><div class="highlight"><pre><span></span><span class="x">new RequestPathRule([&#39;/privte&#39;, &#39;/users/\d+&#39;])</span>
+</pre></div>
+</div>
+<p>ignore is a list or URI where authentication will be bypassed, this can by a
+string literal or a regular expression for example.</p>
+<div class="highlight-php notranslate"><div class="highlight"><pre><span></span><span class="x">new RequestPathRule([&#39;/&#39;], [&#39;/auth/login&#39;, &#39;/products/[a-zA-Z0-9_-]]&#39;])</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>All regular expressions are <strong>not</strong> treated as case insensative.</p>
+</div>
+</section>
+</section>
+<section id="multiple-tokens">
+<h2>Multiple Tokens<a class="headerlink" href="#multiple-tokens" title="Link to this heading"></a></h2>
+<p>If you need to parse multiple token from different source it’s possible, all you
+need to do is pass multiple secrts to the to the decoder see the below example.</p>
+<div class="highlight-php notranslate"><div class="highlight"><pre><span></span><span class="x">$decoder = new FirebaseDecoder(</span>
+<span class="x">  new Secret($_ENV[&#39;JWT_ALPHA_SECRET&#39;], &#39;HS256&#39;, &#39;alpha&#39;),</span>
+<span class="x">  new Secret($_ENV[&#39;JWT_BETA_SECRET&#39;], &#39;HS256&#39;, &#39;beta&#39;),</span>
+<span class="x">);</span>
+<span class="x">$authentication = new JwtAuthentication(new Options(), $decoder);</span>
+</pre></div>
+</div>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>when multiple secrets are passsed the <code class="docutils literal notranslate"><span class="pre">kid</span></code> is required in the token header
+and in the <code class="docutils literal notranslate"><span class="pre">Secret</span></code> class. The kid is used by the decoder to determine which
+secret to use to decode the JWT.</p>
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="overview.html" class="btn btn-neutral float-left" title="Overview" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="options.html" class="btn btn-neutral float-right" title="Options" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, James Read.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  
+<div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    <span class="fa fa-book"> Other Versions</span>
+    v: latest
+    <span class="fa fa-caret-down"></span>
+  </span>
+  <div class="rst-other-versions">
+    
+    <dl>
+      <dt>Languages</dt>
+        
+          <dd><a href="https://localhost:3000/latest/en/index.html">en</a></dd>
+        
+    </dl>
+    
+    <dl>
+      <dt>Tags</dt>
+      <dd><a href="https://localhost:3000/2.0/en">2.0</a></dd>
+    </dl>
+    <dl>
+      <dt>Branches</dt>
+      <dd><a href="https://localhost:3000">main</a></dd>
+    </dl>
+  </div>
+</div><script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

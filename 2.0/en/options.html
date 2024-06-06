@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Options &mdash; jwt-auth 2.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
+
+  
+    <link rel="canonical" href="https://localhost:3000/options.html" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="_static/documentation_options.js?v=60dbed4a"></script>
+        <script src="_static/doctools.js?v=9a2dae69"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Decoder" href="decoder.html" />
+    <link rel="prev" title="Quickstart" href="quickstart.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            jwt-auth
+          </a>
+              <div class="version">
+                2.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Options</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#issecure">isSecure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#relaxed">relaxed</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#header">header</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#cookie">cookie</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#regexp">regexp</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#attribute">attribute</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#before">before</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#after">after</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="decoder.html">Decoder</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">jwt-auth</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Options</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/options.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="options">
+<h1>Options<a class="headerlink" href="#options" title="Link to this heading"></a></h1>
+<p>You can customise the way the middleware works, options control various aspects
+of the middleware.</p>
+<section id="issecure">
+<h2>isSecure<a class="headerlink" href="#issecure" title="Link to this heading"></a></h2>
+<dl class="field-list simple">
+<dt class="field-odd">Summary<span class="colon">:</span></dt>
+<dd class="field-odd"><p>enforces all requests to be HTTPS</p>
+</dd>
+<dt class="field-even">Types<span class="colon">:</span></dt>
+<dd class="field-even"><p>bool</p>
+</dd>
+<dt class="field-odd">Default<span class="colon">:</span></dt>
+<dd class="field-odd"><p>true</p>
+</dd>
+</dl>
+<p>This will throw a <code class="docutils literal notranslate"><span class="pre">RuntimeException</span></code> when a request is sent using HTTP</p>
+</section>
+<section id="relaxed">
+<h2>relaxed<a class="headerlink" href="#relaxed" title="Link to this heading"></a></h2>
+<dl class="field-list">
+<dt class="field-odd">Summary<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A list of domains or IP addresses where not to enforce HTTPS</p>
+</dd>
+<dt class="field-even">Types<span class="colon">:</span></dt>
+<dd class="field-even"><p>string[]</p>
+</dd>
+<dt class="field-odd">Default<span class="colon">:</span></dt>
+<dd class="field-odd"><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="s2">&quot;localhost&quot;</span><span class="p">,</span> <span class="s2">&quot;127.0.0.1&quot;</span><span class="p">,</span> <span class="s2">&quot;::1&quot;</span><span class="p">]</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This is useful for development perposes but is <strong>not recomended</strong> for production</p>
+</div>
+</section>
+<section id="header">
+<h2>header<a class="headerlink" href="#header" title="Link to this heading"></a></h2>
+<dl class="field-list simple">
+<dt class="field-odd">Summary<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Controls the name of the header to search for the token</p>
+</dd>
+<dt class="field-even">Types<span class="colon">:</span></dt>
+<dd class="field-even"><p>string</p>
+</dd>
+<dt class="field-odd">Default<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">Authorization</span></code></p>
+</dd>
+</dl>
+<p>you way not want to always use the Authorization header you can change this with
+your own custom header.</p>
+<div class="highlight-php notranslate"><div class="highlight"><pre><span></span><span class="x">new Options(header: &#39;My-Token&#39;)</span>
+</pre></div>
+</div>
+</section>
+<section id="cookie">
+<h2>cookie<a class="headerlink" href="#cookie" title="Link to this heading"></a></h2>
+<dl class="field-list simple">
+<dt class="field-odd">Summary<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Controls the name of the cookie to search for the token</p>
+</dd>
+<dt class="field-even">Types<span class="colon">:</span></dt>
+<dd class="field-even"><p>string</p>
+</dd>
+<dt class="field-odd">Default<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">token</span></code></p>
+</dd>
+</dl>
+<div class="highlight-php notranslate"><div class="highlight"><pre><span></span><span class="x">new Options(cookie: &#39;jwt&#39;)</span>
+</pre></div>
+</div>
+</section>
+<section id="regexp">
+<h2>regexp<a class="headerlink" href="#regexp" title="Link to this heading"></a></h2>
+<dl class="field-list simple">
+<dt class="field-odd">Summary<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Control how the token is found in the header and cookie</p>
+</dd>
+<dt class="field-even">Types<span class="colon">:</span></dt>
+<dd class="field-even"><p>string</p>
+</dd>
+<dt class="field-odd">Default<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">/Bearer\\s+(.*)$/i</span></code></p>
+</dd>
+</dl>
+<p>You may want to change how the token is parsed from the header and cookie, one
+common use is to not including the bearer.</p>
+<div class="highlight-php notranslate"><div class="highlight"><pre><span></span><span class="x">new Options(regexp: &#39;/^(?:[a-z0-9-_]+.){2}(?:[a-z0-9-_]+)$/i&#39;)</span>
+</pre></div>
+</div>
+</section>
+<section id="attribute">
+<h2>attribute<a class="headerlink" href="#attribute" title="Link to this heading"></a></h2>
+<dl class="field-list simple">
+<dt class="field-odd">Summary<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Control what the attribute name where the decoded token is storged on the request</p>
+</dd>
+<dt class="field-even">Types<span class="colon">:</span></dt>
+<dd class="field-even"><p>string|null</p>
+</dd>
+<dt class="field-odd">Default<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">token</span></code></p>
+</dd>
+</dl>
+<div class="highlight-php notranslate"><div class="highlight"><pre><span></span><span class="x">new Options(attribute: &#39;jwt&#39;)</span>
+
+<span class="x">// @var RequestInterface $request</span>
+<span class="x">$request-&gt;getAttribute(&#39;jwt&#39;); // [&#39;iat&#39; =&gt; 1717219258 exp&#39; =&gt; 1717219258]</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>If set to null no attribute will be added to the requesst.</p>
+</div>
+</section>
+<section id="before">
+<h2>before<a class="headerlink" href="#before" title="Link to this heading"></a></h2>
+<dl class="field-list simple">
+<dt class="field-odd">Summary<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Allows for modification of the request before passing it to the next handler</p>
+</dd>
+<dt class="field-even">Types<span class="colon">:</span></dt>
+<dd class="field-even"><p>BeforeHandlerInterface|null</p>
+</dd>
+<dt class="field-odd">Default<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">none</span></code></p>
+</dd>
+</dl>
+<p>Sometimes it’s useful to modify the request to the next handler for example
+adding user infomation into the request for csutomer authorization handing.
+This must be an instanc of <code class="docutils literal notranslate"><span class="pre">BeforeHandlerInterface</span></code></p>
+<div class="highlight-php notranslate"><div class="highlight"><pre><span></span><span class="x">class MyBeforeHandler impliments BeforeHandlerInterface {</span>
+<span class="x">  /**</span>
+<span class="x">   * @param array{decoded: array&lt;string, mixed&gt;, token: string} $arguments</span>
+<span class="x">   */</span>
+<span class="x">  public function __invoke(ServerRequestInterface $request, array $arguments): ServerRequestInterface</span>
+<span class="x">  {</span>
+<span class="x">    // adds the unparsd token to the requeest</span>
+<span class="x">    return $request-&gt;withAttribute(&#39;raw&#39;, $arguments[&#39;token&#39;])</span>
+<span class="x">  }</span>
+<span class="x">}</span>
+
+<span class="x">// ...</span>
+
+<span class="x">new Options(before: new MyBeforeHandler())</span>
+</pre></div>
+</div>
+</section>
+<section id="after">
+<h2>after<a class="headerlink" href="#after" title="Link to this heading"></a></h2>
+<dl class="field-list simple">
+<dt class="field-odd">Summary<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Allows for modification of the response from the next handler</p>
+</dd>
+<dt class="field-even">Types<span class="colon">:</span></dt>
+<dd class="field-even"><p>AfterHandlerInterface|null</p>
+</dd>
+<dt class="field-odd">Default<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">none</span></code></p>
+</dd>
+</dl>
+<p>If you need to modify all response after the authentication middleware has
+executed you can do so by providing a instance of <code class="docutils literal notranslate"><span class="pre">AfterHandlerInterface</span></code>.
+This is mostly useful for adding additional response headers.</p>
+<div class="highlight-php notranslate"><div class="highlight"><pre><span></span><span class="x">class MyAfterHandlerInterface impliments AfterHandlerInterface</span>
+<span class="x">{</span>
+<span class="x">  /**</span>
+<span class="x">   * @param array{decoded: array&lt;string, mixed&gt;, token: string} $arguments</span>
+<span class="x">   */</span>
+<span class="x">  public function __invoke(ResponseInterface $response, array $arguments): ResponseInterface</span>
+<span class="x">  {</span>
+<span class="x">    return $response-&gt;withHeader(&#39;Custom-Header&#39;, &#39;my data&#39;)</span>
+<span class="x">  }</span>
+<span class="x">}</span>
+
+<span class="x">// ...</span>
+
+<span class="x">new Options(after: new MyAfterHandlerInterface());</span>
+</pre></div>
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="quickstart.html" class="btn btn-neutral float-left" title="Quickstart" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="decoder.html" class="btn btn-neutral float-right" title="Decoder" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, James Read.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  
+<div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    <span class="fa fa-book"> Other Versions</span>
+    v: 2.0
+    <span class="fa fa-caret-down"></span>
+  </span>
+  <div class="rst-other-versions">
+    
+    <dl>
+      <dt>Languages</dt>
+        
+          <dd><a href="https://localhost:3000/2.0/en/index.html">en</a></dd>
+        
+    </dl>
+    
+    <dl>
+      <dt>Tags</dt>
+      <dd><a href="https://localhost:3000/2.0/en">2.0</a></dd>
+    </dl>
+    <dl>
+      <dt>Branches</dt>
+      <dd><a href="https://localhost:3000">main</a></dd>
+    </dl>
+  </div>
+</div><script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
