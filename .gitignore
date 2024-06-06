@@ -1,5 +1,6 @@
 /vendor/
 /report/
+/pages/
 composer.lock
 .phplint.cache
 coverage.xml

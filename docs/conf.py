@@ -1,3 +1,6 @@
+import os
+import yaml
+
 # Configuration file for the Sphinx documentation builder.
 #
 # For the full list of built-in configuration values, see the documentation:
@@ -35,11 +38,23 @@ html_sidebars = {
 locale_dirs = ['locale/']   # path is example but recommended.
 gettext_compact = False     # optional.
 
+current_language = os.environ.get("current_language")
+current_version = os.environ.get("current_version")
+
+build_all_docs = os.environ.get("build_all_docs")
+pages_root = os.environ.get("pages_root", "")
+
+
 html_context = {
-    "current_version": {"name": "latest"},
-    "versions": {
-        "tags": [
-          {"name": "2.0", "url": "./latest"},
-        ],
-    },
+  "current_language": current_language,
+  "languages": [],
+  "current_version": { "name": current_version },
+  "versions": [],
 }
+
+with open("versions.yaml", "r") as yaml_file:
+    docs = yaml.safe_load(yaml_file)
+    for language in docs[current_version].get('languages', []):
+      html_context['languages'].append([language, pages_root+'/'+current_version+'/'+language])
+      for version, details in docs.items():
+        html_context['versions'].append([version, pages_root+'/'+version+'/'+current_language])
