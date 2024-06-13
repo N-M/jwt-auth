@@ -71,6 +71,7 @@ is the same.
 
 ```bash
 composer require -W jimtools/jwt-auth
+composer remove tuupola/slim-jwt-auth
 ```
 
 Update the `JwtAuthentication` config to have keys for the `secret` and
