@@ -1,6 +1,7 @@
 <?php
 
 declare(strict_types=1);
+use PhpCsFixer\Runner\Parallel\ParallelConfigFactory;
 
 require __DIR__ . '/vendor/autoload.php';
 
@@ -8,6 +9,7 @@ $finder = (new PhpCsFixer\Finder())
     ->in(__DIR__);
 
 return (new PhpCsFixer\Config())
+    ->setParallelConfig(ParallelConfigFactory::detect())
     ->setRiskyAllowed(true)
     ->setRules([
         '@PSR12' => true,
