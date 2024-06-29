@@ -29,7 +29,6 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Rector\Rector\AbstractRector;
 use RuntimeException;
-use Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample;
 use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
 
 use function count;
@@ -101,15 +100,12 @@ final class JwtAuthUpgradeRector extends AbstractRector
         return null;
     }
 
+    /**
+     * @codeCoverageIgnore
+     */
     public function getRuleDefinition(): RuleDefinition
     {
-        return new RuleDefinition(
-            'Updates something',
-            new CodeSample(
-                'old stuff',
-                'new stuff',
-            ),
-        );
+        return new RuleDefinition('Upgrades JwtAuthentication from v1 to v2');
     }
 
     private function replaceArgs(array $optionArgs, array $decoderArgs, ?Array_ $rules): array
@@ -146,7 +142,7 @@ final class JwtAuthUpgradeRector extends AbstractRector
                 $val = $this->convertAfter($val);
             }
 
-            if (in_array($key, ['error', 'path', 'ignore'], true)) {
+            if (in_array($key, ['error', 'logger',  'path', 'ignore'], true)) {
                 if ($key === 'path') {
                     $paths = $val;
                 }
@@ -159,6 +155,10 @@ final class JwtAuthUpgradeRector extends AbstractRector
             }
 
             if ($this->isOptionDefault($key, $val)) {
+                continue;
+            }
+
+            if ($val instanceof Array_ && count($val->items) < 1) {
                 continue;
             }
 
@@ -184,17 +184,13 @@ final class JwtAuthUpgradeRector extends AbstractRector
             if ($key === 'algorithm') {
                 $algo = [];
                 foreach ($val->items as $item) {
-                    if ($item->value->key === null) {
+                    if ($item->key  === null) {
                         $algo[] = $item->value;
                     } else {
-                        $algo[$item->value->key] = $item->value;
+                        $algo[$item->key->value] = $item->value;
                     }
                 }
 
-                continue;
-            }
-
-            if ($val instanceof Array_ && count($val->items) < 1) {
                 continue;
             }
 
@@ -364,8 +360,8 @@ final class JwtAuthUpgradeRector extends AbstractRector
             }
 
             $args = [
-                new Arg($algo),
                 new Arg($secret),
+                new Arg($algo),
             ];
 
             if ($hasMany === true) {
