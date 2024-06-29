@@ -27,8 +27,8 @@ use JimTools\JwtAuth\Rules\RequestMethodRule;
 use JimTools\JwtAuth\Rules\RequestPathRule;
 
 $auth = new JwtAuthentication(new JimTools\JwtAuth\Options(), new JimTools\JwtAuth\Decoder\FirebaseDecoder(new JimTools\JwtAuth\Secret('secret', 'HS256')), [
-  new RequestMethodRule(['OPTIONS', 'HEAD']),
-  new RequestPathRule(['/', '/api/v1'], ['/api/v1/auth'])
+  new RequestMethodRule(['HEAD']),
+  new RequestPathRule(['/api/v1'], ['/api/v1/auth'])
 ]);
 
 ?>

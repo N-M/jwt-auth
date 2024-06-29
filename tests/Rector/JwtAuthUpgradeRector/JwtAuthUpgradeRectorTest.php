@@ -10,10 +10,12 @@ use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Rector\Testing\PHPUnit\AbstractRectorTestCase;
 
+/**
+ * @internal
+ */
 #[CoversClass(JwtAuthUpgradeRector::class)]
-class JwtAuthUpgradeRectorTest extends AbstractRectorTestCase
+final class JwtAuthUpgradeRectorTest extends AbstractRectorTestCase
 {
-
     #[DataProvider('provideData')]
     public function test(string $filePath): void
     {

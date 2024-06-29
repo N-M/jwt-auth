@@ -134,15 +134,15 @@ final class JwtAuthUpgradeRector extends AbstractRector
                 continue;
             }
 
-            if($key === 'before' && $val instanceof Closure) {
+            if ($key === 'before' && $val instanceof Closure) {
                 $val = $this->convertBefore($val);
             }
 
-            if($key === 'after' && $val instanceof Closure) {
+            if ($key === 'after' && $val instanceof Closure) {
                 $val = $this->convertAfter($val);
             }
 
-            if (in_array($key, ['error', 'logger',  'path', 'ignore'], true)) {
+            if (in_array($key, ['error', 'logger', 'path', 'ignore'], true)) {
                 if ($key === 'path') {
                     $paths = $val;
                 }
@@ -163,7 +163,7 @@ final class JwtAuthUpgradeRector extends AbstractRector
             }
 
             if ($key === 'rules' && $val instanceof Array_) {
-                $rules = $this->applyDefaultsToRules($val);
+                $rules = $val;
 
                 continue;
             }
@@ -172,10 +172,9 @@ final class JwtAuthUpgradeRector extends AbstractRector
                 $secret = [$val];
                 if ($val instanceof Array_) {
                     $secret = [];
-                    foreach($val->items as $item) {
+                    foreach ($val->items as $item) {
                         $secret[$item->key->value] = $item->value;
                     }
-
                 }
 
                 continue;
@@ -184,7 +183,7 @@ final class JwtAuthUpgradeRector extends AbstractRector
             if ($key === 'algorithm') {
                 $algo = [];
                 foreach ($val->items as $item) {
-                    if ($item->key  === null) {
+                    if ($item->key === null) {
                         $algo[] = $item->value;
                     } else {
                         $algo[$item->key->value] = $item->value;
@@ -213,36 +212,11 @@ final class JwtAuthUpgradeRector extends AbstractRector
         }
 
         // no algo defined so default
-        if(!isset($algo)) {
-            $algo = [ new String_('HS256')];
+        if (!isset($algo)) {
+            $algo = [new String_('HS256')];
         }
 
         return [$optionArgs, $this->createDecoderArgs($secret, $algo), $rules];
-    }
-
-    /**
-     * applies default values to keep behavior the same.
-     */
-    private function applyDefaultsToRules(Array_ $rules): Array_
-    {
-        foreach($rules->items as $rule) {
-            $name = $this->getName($rule->value->class);
-            if(
-                $name === 'Tuupola\Middleware\JwtAuthentication\RequestMethodRule'
-                && count($rule->value->args) > 0
-            ) {
-                array_unshift($rule->value->args[0]->value->items, new ArrayItem(new String_('OPTIONS')));
-            }
-
-            if (
-                $name === 'Tuupola\Middleware\JwtAuthentication\RequestPathRule'
-                && count($rule->value->args) > 0
-            ) {
-                array_unshift($rule->value->args[0]->value->items, new ArrayItem(new String_('/')));
-            }
-        }
-
-        return $rules;
     }
 
     private function convertAfter(Closure $val): New_
@@ -267,7 +241,7 @@ final class JwtAuthUpgradeRector extends AbstractRector
                             'returnType' => $resp,
                             'stmts' => $val->stmts,
                         ],
-                    )
+                    ),
                 ],
             ],
             $val->getAttributes()
@@ -298,7 +272,7 @@ final class JwtAuthUpgradeRector extends AbstractRector
                             'returnType' => $req,
                             'stmts' => $val->stmts,
                         ],
-                    )
+                    ),
                 ],
             ],
             $val->getAttributes()
