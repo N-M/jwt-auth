@@ -172,9 +172,11 @@ final class JwtAuthUpgradeRector extends AbstractRector
             if ($key === 'secret') {
                 $secret = [$val];
                 if ($val instanceof Array_) {
-                    $secret = array_map(static function (ArrayItem $item) {
-                        return $item->value;
-                    }, $val->items);
+                    $secret = [];
+                    foreach($val->items as $item) {
+                        $secret[$item->key->value] = $item->value;
+                    }
+
                 }
 
                 continue;
@@ -210,6 +212,11 @@ final class JwtAuthUpgradeRector extends AbstractRector
 
         if ($rules === null) {
             $rules = $this->createRules($paths, $ignore);
+        }
+
+        // no algo defined so default
+        if(!isset($algo)) {
+            $algo = [ new String_('HS256')];
         }
 
         return [$optionArgs, $this->createDecoderArgs($secret, $algo), $rules];
