@@ -162,9 +162,8 @@ final class JwtAuthUpgradeRector extends AbstractRector
                 continue;
             }
 
-            // null/empty check
             if ($key === 'rules' && $val instanceof Array_) {
-                $rules = $val;
+                $rules = $this->applyDefaultsToRules($val);
 
                 continue;
             }
@@ -182,7 +181,6 @@ final class JwtAuthUpgradeRector extends AbstractRector
                 continue;
             }
 
-            // null/empty check
             if ($key === 'algorithm') {
                 $algo = [];
                 foreach ($val->items as $item) {
@@ -220,6 +218,31 @@ final class JwtAuthUpgradeRector extends AbstractRector
         }
 
         return [$optionArgs, $this->createDecoderArgs($secret, $algo), $rules];
+    }
+
+    /**
+     * applies default values to keep behavior the same.
+     */
+    private function applyDefaultsToRules(Array_ $rules): Array_
+    {
+        foreach($rules->items as $rule) {
+            $name = $this->getName($rule->value->class);
+            if(
+                $name === 'Tuupola\Middleware\JwtAuthentication\RequestMethodRule'
+                && count($rule->value->args) > 0
+            ) {
+                array_unshift($rule->value->args[0]->value->items, new ArrayItem(new String_('OPTIONS')));
+            }
+
+            if (
+                $name === 'Tuupola\Middleware\JwtAuthentication\RequestPathRule'
+                && count($rule->value->args) > 0
+            ) {
+                array_unshift($rule->value->args[0]->value->items, new ArrayItem(new String_('/')));
+            }
+        }
+
+        return $rules;
     }
 
     private function convertAfter(Closure $val): New_
