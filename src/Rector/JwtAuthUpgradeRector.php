@@ -96,8 +96,6 @@ final class JwtAuthUpgradeRector extends AbstractRector
 
             return $node;
         }
-
-        return null;
     }
 
     /**
@@ -405,6 +403,7 @@ final class JwtAuthUpgradeRector extends AbstractRector
                 return new Name(RuleInterface::class);
 
             default:
+                // @codeCoverageIgnore
                 throw new RuntimeException('unknown class name');
         }
     }
