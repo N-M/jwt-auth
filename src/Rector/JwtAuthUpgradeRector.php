@@ -337,6 +337,7 @@ final class JwtAuthUpgradeRector extends AbstractRector
         }
 
         if ($paths !== null) {
+            array_unshift($paths->items, new ArrayItem(new String_('/')));
             $args[] = new Arg($paths, name: new Identifier('path'));
         }
 
