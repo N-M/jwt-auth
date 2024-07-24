@@ -92,6 +92,7 @@ final class JwtAuthentication implements MiddlewareInterface
      *   before: null|callable,
      *   after: null|callable,
      *   error: null|callable,
+     *   logger: null|LoggerInterface,
      * }
      */
     private array $options = [
@@ -106,7 +107,8 @@ final class JwtAuthentication implements MiddlewareInterface
         "ignore" => [],
         "before" => null,
         "after" => null,
-        "error" => null
+        "error" => null,
+        "logger" => null,
     ];
 
     /**
@@ -124,6 +126,7 @@ final class JwtAuthentication implements MiddlewareInterface
      *   before?: null|callable,
      *   after?: null|callable,
      *   error?: null|callable,
+     *   logger?: null|LoggerInterface,
      * } $options
      */
     public function __construct(array $options = [])
