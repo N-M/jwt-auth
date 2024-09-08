@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace JimTools\JwtAuth\Rector;
 
+use ArrayAccess;
 use JimTools\JwtAuth\Decoder\FirebaseDecoder;
 use JimTools\JwtAuth\Middleware\JwtAuthentication;
 use JimTools\JwtAuth\Options;
@@ -13,6 +14,7 @@ use JimTools\JwtAuth\Rules\RuleInterface;
 use JimTools\JwtAuth\Secret;
 use PhpParser\Node;
 use PhpParser\Node\Arg;
+use PhpParser\Node\Expr;
 use PhpParser\Node\Expr\Array_;
 use PhpParser\Node\Expr\ArrayItem;
 use PhpParser\Node\Expr\Closure;
@@ -75,9 +77,9 @@ final class JwtAuthUpgradeRector extends AbstractRector
                     continue;
                 }
 
-                $newUse = new UseUse($this->replaceUse($name), $use->alias);
+                $newUse = [new UseUse($this->replaceUse($name), $use->alias)];
 
-                return new Use_([$newUse]);
+                return new Use_($newUse);
             }
 
             return $node;
@@ -96,6 +98,8 @@ final class JwtAuthUpgradeRector extends AbstractRector
 
             return $node;
         }
+
+        return null;
     }
 
     /**
@@ -106,6 +110,9 @@ final class JwtAuthUpgradeRector extends AbstractRector
         return new RuleDefinition('Upgrades JwtAuthentication from v1 to v2');
     }
 
+    /**
+     * @return Arg[]
+     */
     private function replaceArgs(array $optionArgs, array $decoderArgs, ?Array_ $rules): array
     {
         $optionObj = new Name(Options::class);
@@ -118,6 +125,9 @@ final class JwtAuthUpgradeRector extends AbstractRector
         ]);
     }
 
+    /**
+     * @return array{0:Arg[],1:Arg[],2:Array_|null}
+     */
     private function extractArgs(Array_ $options): array
     {
         $paths = null;
@@ -178,7 +188,7 @@ final class JwtAuthUpgradeRector extends AbstractRector
                 continue;
             }
 
-            if ($key === 'algorithm') {
+            if ($key === 'algorithm' && $val instanceof Array_) {
                 $algo = [];
                 foreach ($val->items as $item) {
                     if ($item->key === null) {
@@ -279,7 +289,7 @@ final class JwtAuthUpgradeRector extends AbstractRector
         return new New_($before);
     }
 
-    private function isOptionDefault(string $key, $val): bool
+    private function isOptionDefault(string $key, Expr $val): bool
     {
         if (
             $key === 'secure'
@@ -350,6 +360,9 @@ final class JwtAuthUpgradeRector extends AbstractRector
         );
     }
 
+    /**
+     * @return array<array-key,Arg>
+     */
     private function createDecoderArgs(array $secrets, array $algorithms): array
     {
         $keyObjects = [];
@@ -403,8 +416,7 @@ final class JwtAuthUpgradeRector extends AbstractRector
                 return new Name(RuleInterface::class);
 
             default:
-                // @codeCoverageIgnore
-                throw new RuntimeException('unknown class name');
+                throw new RuntimeException('unknown class name'); // @codeCoverageIgnore
         }
     }
 }
