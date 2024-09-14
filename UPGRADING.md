@@ -10,7 +10,7 @@ notible changes but it's not extencive.
 - Secrets moved into class
 - Logger removed
 - removed error handler
-- Before and After handlers
+- Before and After handlers changed
 
 The recommeded upgrade path is to use [Rector](https://github.com/rectorphp/rector) this will automate the bulk of the
 changes however there are somethings which cannot be be automated and will need manual intervention, see
