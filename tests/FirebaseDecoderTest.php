@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace JimTools\JwtAuth\Test;
 
 use DateTime;
-use DomainException;
+use JimTools\JwtAuth\Exceptions\DomainException;
 use Firebase\JWT\JWT;
 use Generator;
-use InvalidArgumentException;
+use JimTools\JwtAuth\Exceptions\InvalidArgumentException;
 use JimTools\JwtAuth\Decoder\DecoderInterface;
 use JimTools\JwtAuth\Decoder\FirebaseDecoder;
 use JimTools\JwtAuth\Exceptions\BeforeValidException;
@@ -20,7 +20,7 @@ use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
-use UnexpectedValueException;
+use JimTools\JwtAuth\Exceptions\UnexpectedValueException;
 
 /**
  * @internal

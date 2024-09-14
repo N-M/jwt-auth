@@ -4,18 +4,21 @@ declare(strict_types=1);
 
 namespace JimTools\JwtAuth\Decoder;
 
-use DomainException;
+use DomainException as BaseDomainException;
+use JimTools\JwtAuth\Exceptions\DomainException;
 use Firebase\JWT\BeforeValidException as JwtBeforeValidException;
 use Firebase\JWT\ExpiredException as JwtExpiredException;
 use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
 use Firebase\JWT\SignatureInvalidException as JwtSignatureInvalidException;
-use InvalidArgumentException;
+use InvalidArgumentException as BaseInvalidArgumentException;
+use JimTools\JwtAuth\Exceptions\InvalidArgumentException;
 use JimTools\JwtAuth\Exceptions\BeforeValidException;
 use JimTools\JwtAuth\Exceptions\ExpiredException;
 use JimTools\JwtAuth\Exceptions\SignatureInvalidException;
 use JimTools\JwtAuth\Secret;
-use UnexpectedValueException;
+use UnexpectedValueException as BaseUnexpectedValueException;
+use JimTools\JwtAuth\Exceptions\UnexpectedValueException;
 
 use function count;
 
@@ -47,18 +50,18 @@ final class FirebaseDecoder implements DecoderInterface
             }
 
             return (array) JWT::decode($jwt, $keys);
-        } catch (InvalidArgumentException $e) {
-            throw $e;
-        } catch (DomainException $e) {
-            throw $e;
+        } catch (BaseInvalidArgumentException $e) {
+            throw new InvalidArgumentException($e->getMessage(), 0, $e);
+        } catch (BaseDomainException $e) {
+            throw new DomainException($e->getMessage(), 0, $e);
         } catch (JwtSignatureInvalidException $e) {
             throw new SignatureInvalidException($e->getMessage(), 0, $e);
         } catch (JwtBeforeValidException $e) {
             throw new BeforeValidException($e->getMessage(), 0, $e);
         } catch (JwtExpiredException $e) {
             throw new ExpiredException($e->getMessage(), 0, $e);
-        } catch (UnexpectedValueException $e) {
-            throw $e;
+        } catch (BaseUnexpectedValueException $e) {
+            throw new UnexpectedValueException($e->getMessage(), 0, $e);
         }
     }
 }
