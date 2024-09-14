@@ -1,4 +1,3 @@
-/node_modules/
 /vendor/
 /report/
 /docs/bin/
@@ -8,5 +7,8 @@
 /docs/pyvenv.cfg
 /pages/
 composer.lock
-.phplint-cache
+.phplint.cache
 coverage.xml
+.phpunit.cache
+.phpunit.result.cache
+.php-cs-fixer.cache

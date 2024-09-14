@@ -1,162 +1,138 @@
-===================
-Optional parameters
-===================
+=======
+Options
+=======
 
-Path
-----
+You can customise the way the middleware works, options control various aspects
+of the middleware.
 
-The optional ``path`` parameter allows you to specify the protected part of your website. It can be either a string or
-an array. You do not need to specify each URL. Instead, think of ``path`` setting as a folder. In the example below
-everything starting with ``/api`` will be authenticated. If you do not define ``path`` all routes will be protected.
+isSecure
+--------
+:Summary: enforces all requests to be HTTPS
+:Types: bool
+:Default: true
 
-.. code-block:: php
+This will throw a ``RuntimeException`` when a request is sent using HTTP
 
-  $app = new Slim\App;
+relaxed
+-------
+:Summary: A list of domains or IP addresses where not to enforce HTTPS
+:Types: string[]
+:Default:
+  ::
 
-  $app->add(new Tuupola\Middleware\JwtAuthentication([
-      "path" => "/api", /* or ["/api", "/admin"] */
-      "secret" => "supersecretkeyyoushouldnotcommittogithub"
-  ]));
+    ["localhost", "127.0.0.1", "::1"]
 
-Ignore
+.. note::
+
+  This is useful for development perposes but is **not recomended** for production
+
+header
 ------
 
-With the optional ``ignore`` parameter you can make exceptions to ``path`` parameter. In the example below everything
-starting with ``/api`` and ``/admin`` will be authenticated except ``/api/token`` and ``/admin/ping`` which will not be
-authenticated.
+:Summary: Controls the name of the header to search for the token
+:Types: string
+:Default: ``Authorization``
+
+you way not want to always use the Authorization header you can change this with
+your own custom header.
 
 .. code-block:: php
 
-  $app = new Slim\App;
+  new Options(header: 'My-Token')
 
-  $app->add(new Tuupola\Middleware\JwtAuthentication([
-      "path" => ["/api", "/admin"],
-      "ignore" => ["/api/token", "/admin/ping"],
-      "secret" => "supersecretkeyyoushouldnotcommittogithub"
-  ]));
-
-Header
+cookie
 ------
-
-By default, middleware tries to find the token from the ``Authorization`` header. You can change the header name using
-the ``header`` parameter.
+:Summary: Controls the name of the cookie to search for the token
+:Types: string
+:Default: ``token``
 
 .. code-block:: php
 
-  $app = new Slim\App;
+  new Options(cookie: 'jwt')
 
-  $app->add(new Tuupola\Middleware\JwtAuthentication([
-      "header" => "X-Token",
-      "secret" => "supersecretkeyyoushouldnotcommittogithub"
-  ]));
-
-Regexp
+regexp
 ------
+:Summary: Control how the token is found in the header and cookie
+:Types: string
+:Default: ``/Bearer\\s+(.*)$/i``
 
-By default, the middleware assumes the value of the header is in ``Bearer <token>`` format. You can change this
-behaviour with the ``regexp`` parameter. For example, if you have a custom header such as ``X-Token: <token>`` you
-should pass both header and regexp parameters.
-
-.. code-block:: php
-
-  $app = new Slim\App;
-
-  $app->add(new Tuupola\Middleware\JwtAuthentication([
-      "header" => "X-Token",
-      "regexp" => "/(.*)/",
-      "secret" => "supersecretkeyyoushouldnotcommittogithub"
-  ]));
-
-Cookie
-------
-
-If the token is not found from the header, the middleware tries to find it via a cookie named ``token``. You can change
-the cookie name using the ``cookie`` parameter.
+You may want to change how the token is parsed from the header and cookie, one
+common use is to not including the bearer.
 
 .. code-block:: php
 
-  $app = new Slim\App;
+  new Options(regexp: '/^(?:[a-z0-9-_]+.){2}(?:[a-z0-9-_]+)$/i')
 
-  $app->add(new Tuupola\Middleware\JwtAuthentication([
-      "cookie" => "nekot",
-      "secret" => "supersecretkeyyoushouldnotcommittogithub"
-  ]));
-
-
-Algorithm
+attribute
 ---------
 
-You can set supported algorithms via the ``algorithm`` parameter. This can be either a string or an array of strings.
-The default value is ``["HS256"]``. Supported algorithms are ``HS256``, ``HS384``, ``HS512`` and ``RS256``. Note that
-enabling both ``HS256`` and ``RS256`` is a
-`security risk <https://auth0.com/blog/critical-vulnerabilities-in-json-web-token-libraries/>`_.
-
-When passing multiple algorithms it must be a key array, with the key matching the ``kid`` of the JWT.
+:Summary: Control what the attribute name where the decoded token is storged on the request
+:Types: string|null
+:Default: ``token``
 
 .. code-block:: php
 
-  $app = new Slim\App;
+  new Options(attribute: 'jwt')
 
-  $app->add(new Tuupola\Middleware\JwtAuthentication([
-      "secret" => [
-          "acme" => "supersecretkeyyoushouldnotcommittogithub",
-          "beta" => "supersecretkeyyoushouldnotcommittogithub",
-      "algorithm" => [
-          "amce" => "HS256",
-          "beta" => "HS384"
-      ]
-  ]));
-.. warning::
-  Because of changes in ``firebase/php-jwt`` the ``kid`` is now checked when multiple algorithms are set, if you do not
-  specify a key the algorithm will be used as the key. this also means the ``kid`` will now need to be present in the
-  JWT header as well.
+  // @var RequestInterface $request
+  $request->getAttribute('jwt'); // ['iat' => 1717219258 exp' => 1717219258]
 
-Attribute
----------
+.. note::
 
-When the token is decoded successfully and authentication succeeds the contents of the decoded token are saved as a
-``token`` attribute to the ``$request`` object. You can change this with. ``attribute`` parameter. Set to ``null`` or
-``false`` to disable this behaviour
+  If set to null no attribute will be added to the requesst.
 
-.. code-block:: php
-
-  $app = new Slim\App;
-
-  $app->add(new Tuupola\Middleware\JwtAuthentication([
-      "attribute" => "jwt",
-      "secret" => "supersecretkeyyoushouldnotcommittogithub"
-  ]));
-
-  /* ... */
-
-  $decoded = $request->getAttribute("jwt");
-
-Logger
+before
 ------
 
-The optional ``logger`` parameter allows you to pass in a PSR-3 compatible logger to help with debugging or other
-application logging needs.
+:Summary: Allows for modification of the request before passing it to the next handler
+:Types: BeforeHandlerInterface|null
+:Default: ``none``
+
+Sometimes it's useful to modify the request to the next handler for example
+adding user infomation into the request for csutomer authorization handing.
+This must be an instanc of ``BeforeHandlerInterface``
 
 .. code-block:: php
 
-  use Monolog\Logger;
-  use Monolog\Handler\RotatingFileHandler;
+  class MyBeforeHandler impliments BeforeHandlerInterface {
+    /**
+     * @param array{decoded: array<string, mixed>, token: string} $arguments
+     */
+    public function __invoke(ServerRequestInterface $request, array $arguments): ServerRequestInterface
+    {
+      // adds the unparsd token to the requeest
+      return $request->withAttribute('raw', $arguments['token'])
+    }
+  }
 
-  $app = new Slim\App;
+  // ...
 
-  $logger = new Logger("slim");
-  $rotating = new RotatingFileHandler(__DIR__ . "/logs/slim.log", 0, Logger::DEBUG);
-  $logger->pushHandler($rotating);
+  new Options(before: new MyBeforeHandler())
 
-  $app->add(new Tuupola\Middleware\JwtAuthentication([
-      "path" => "/api",
-      "logger" => $logger,
-      "secret" => "supersecretkeyyoushouldnotcommittogithub"
-  ]));
+after
+-----
 
-Before
-------
+:Summary: Allows for modification of the response from the next handler
+:Types: AfterHandlerInterface|null
+:Default: ``none``
 
-The before function is called only when authentication succeeds but before the next incoming middleware is called. You
-can use this to alter the request before passing it to the next incoming middleware in the stack. If it returns anything
-else than ``Psr\Http\Message\ServerRequestInterface`` the return value will be ignored.
+If you need to modify all response after the authentication middleware has
+executed you can do so by providing a instance of ``AfterHandlerInterface``.
+This is mostly useful for adding additional response headers.
+
+.. code-block:: php
+
+  class MyAfterHandlerInterface impliments AfterHandlerInterface
+  {
+    /**
+     * @param array{decoded: array<string, mixed>, token: string} $arguments
+     */
+    public function __invoke(ResponseInterface $response, array $arguments): ResponseInterface
+    {
+      return $response->withHeader('Custom-Header', 'my data')
+    }
+  }
+
+  // ...
+
+  new Options(after: new MyAfterHandlerInterface());

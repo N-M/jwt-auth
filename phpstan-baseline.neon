@@ -1,86 +1,46 @@
 parameters:
 	ignoreErrors:
 		-
-			message: "#^Method Tuupola\\\\Middleware\\\\JwtAuthentication\\:\\:after\\(\\) is unused\\.$#"
-			count: 1
-			path: src/JwtAuthentication.php
+			message: "#^Access to an undefined property PhpParser\\\\Node\\\\Expr\\:\\:\\$value\\.$#"
+			count: 3
+			path: src/Rector/JwtAuthUpgradeRector.php
 
 		-
-			message: "#^Method Tuupola\\\\Middleware\\\\JwtAuthentication\\:\\:algorithm\\(\\) is unused\\.$#"
-			count: 1
-			path: src/JwtAuthentication.php
+			message: "#^Cannot access property \\$value on PhpParser\\\\Node\\\\Expr\\|null\\.$#"
+			count: 2
+			path: src/Rector/JwtAuthUpgradeRector.php
 
 		-
-			message: "#^Method Tuupola\\\\Middleware\\\\JwtAuthentication\\:\\:attribute\\(\\) is unused\\.$#"
+			message: "#^Class Symplify\\\\RuleDocGenerator\\\\ValueObject\\\\RuleDefinition constructor invoked with 1 parameter, 2 required\\.$#"
 			count: 1
-			path: src/JwtAuthentication.php
+			path: src/Rector/JwtAuthUpgradeRector.php
 
 		-
-			message: "#^Method Tuupola\\\\Middleware\\\\JwtAuthentication\\:\\:before\\(\\) is unused\\.$#"
+			message: "#^Instanceof between \\*NEVER\\* and ArrayAccess will always evaluate to false\\.$#"
 			count: 1
-			path: src/JwtAuthentication.php
+			path: src/Rector/JwtAuthUpgradeRector.php
 
 		-
-			message: "#^Method Tuupola\\\\Middleware\\\\JwtAuthentication\\:\\:cookie\\(\\) is unused\\.$#"
+			message: "#^Parameter \\#1 \\$callback of function array_map expects \\(callable\\(PhpParser\\\\Node\\\\ArrayItem\\)\\: mixed\\)\\|null, Closure\\(PhpParser\\\\Node\\\\Expr\\\\ArrayItem\\)\\: mixed given\\.$#"
 			count: 1
-			path: src/JwtAuthentication.php
+			path: src/Rector/JwtAuthUpgradeRector.php
 
 		-
-			message: "#^Method Tuupola\\\\Middleware\\\\JwtAuthentication\\:\\:error\\(\\) is unused\\.$#"
+			message: "#^Parameter \\#1 \\$items of class PhpParser\\\\Node\\\\Expr\\\\Array_ constructor expects array\\<PhpParser\\\\Node\\\\ArrayItem\\>, array\\<int, PhpParser\\\\Node\\\\Expr\\\\ArrayItem\\> given\\.$#"
 			count: 1
-			path: src/JwtAuthentication.php
+			path: src/Rector/JwtAuthUpgradeRector.php
 
 		-
-			message: "#^Method Tuupola\\\\Middleware\\\\JwtAuthentication\\:\\:header\\(\\) is unused\\.$#"
+			message: "#^Parameter \\#1 \\$secrets of method JimTools\\\\JwtAuth\\\\Rector\\\\JwtAuthUpgradeRector\\:\\:createDecoderArgs\\(\\) expects array\\<PhpParser\\\\Node\\\\Expr\\>, array\\<int\\|string, PhpParser\\\\Node\\\\Expr\\>\\|null given\\.$#"
 			count: 1
-			path: src/JwtAuthentication.php
+			path: src/Rector/JwtAuthUpgradeRector.php
 
 		-
-			message: "#^Method Tuupola\\\\Middleware\\\\JwtAuthentication\\:\\:ignore\\(\\) is unused\\.$#"
+			message: "#^Parameter \\#1 \\$uses of class PhpParser\\\\Node\\\\Stmt\\\\Use_ constructor expects array\\<PhpParser\\\\Node\\\\UseItem\\>, array\\<int, PhpParser\\\\Node\\\\Stmt\\\\UseUse\\> given\\.$#"
 			count: 1
-			path: src/JwtAuthentication.php
+			path: src/Rector/JwtAuthUpgradeRector.php
 
 		-
-			message: "#^Method Tuupola\\\\Middleware\\\\JwtAuthentication\\:\\:logger\\(\\) is unused\\.$#"
-			count: 1
-			path: src/JwtAuthentication.php
-
-		-
-			message: "#^Method Tuupola\\\\Middleware\\\\JwtAuthentication\\:\\:path\\(\\) is unused\\.$#"
-			count: 1
-			path: src/JwtAuthentication.php
-
-		-
-			message: "#^Method Tuupola\\\\Middleware\\\\JwtAuthentication\\:\\:regexp\\(\\) is unused\\.$#"
-			count: 1
-			path: src/JwtAuthentication.php
-
-		-
-			message: "#^Method Tuupola\\\\Middleware\\\\JwtAuthentication\\:\\:relaxed\\(\\) is unused\\.$#"
-			count: 1
-			path: src/JwtAuthentication.php
-
-		-
-			message: "#^Method Tuupola\\\\Middleware\\\\JwtAuthentication\\:\\:rules\\(\\) is unused\\.$#"
-			count: 1
-			path: src/JwtAuthentication.php
-
-		-
-			message: "#^Method Tuupola\\\\Middleware\\\\JwtAuthentication\\:\\:secret\\(\\) is unused\\.$#"
-			count: 1
-			path: src/JwtAuthentication.php
-
-		-
-			message: "#^Method Tuupola\\\\Middleware\\\\JwtAuthentication\\:\\:secure\\(\\) is unused\\.$#"
-			count: 1
-			path: src/JwtAuthentication.php
-
-		-
-			message: "#^Parameter \\#1 \\$value of method SplDoublyLinkedList\\<Tuupola\\\\Middleware\\\\JwtAuthentication\\\\RuleInterface\\>\\:\\:push\\(\\) expects Tuupola\\\\Middleware\\\\JwtAuthentication\\\\RuleInterface, callable\\(\\)\\: mixed given\\.$#"
-			count: 1
-			path: src/JwtAuthentication.php
-
-		-
-			message: "#^Property Tuupola\\\\Middleware\\\\JwtAuthentication\\:\\:\\$options \\(array\\{secret\\?\\: array\\<string\\>\\|string, secure\\: bool, relaxed\\: array\\<string\\>, algorithm\\: array\\<string\\>, header\\: string, regexp\\: string, cookie\\: string, attribute\\: string, \\.\\.\\.\\}\\) does not accept non\\-empty\\-array\\<string, mixed\\>\\.$#"
-			count: 1
-			path: src/JwtAuthentication.php
+			message: "#^Parameter \\#1 \\$string of method Psr\\\\Http\\\\Message\\\\StreamInterface\\:\\:write\\(\\) expects string, mixed given\\.$#"
+			count: 2
+			path: tests/JwtAuthenticationTest.php

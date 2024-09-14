@@ -1,0 +1,44 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2024, James Read
+# This file is distributed under the same license as the jwt-auth package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2024.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: jwt-auth \n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2024-06-03 22:20+0800\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: zh\n"
+"Language-Team: zh <LL@li.org>\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.15.0\n"
+
+#: ../../index.rst:5
+msgid "JWT-Auth Documentation"
+msgstr ""
+
+#: ../../index.rst:7
+msgid ""
+"JWT-Auth is a simple middleware which implements JSON Web Token "
+"Authentication that is PSR-15 compliant."
+msgstr ""
+
+#: ../../index.rst:10
+msgid ""
+"JWT-Auth does not implement an OAuth 2.0 authorization server nor does it"
+" provide ways to generate, issue or store authentication tokens. It only "
+"parses and authenticates a token when passed via header or cookie. This "
+"is useful for example when you want to use `JSON Web Tokens as API keys "
+"<https://auth0.com/blog/2014/12/02/using-json-web-tokens-as-api-keys/>`_."
+msgstr ""
+
+#: ../../index.rst:16
+msgid "User Guide"
+msgstr ""
+

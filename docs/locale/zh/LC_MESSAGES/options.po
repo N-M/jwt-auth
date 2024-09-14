@@ -1,0 +1,197 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2024, James Read
+# This file is distributed under the same license as the jwt-auth package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2024.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: jwt-auth \n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2024-06-03 22:20+0800\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: zh\n"
+"Language-Team: zh <LL@li.org>\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.15.0\n"
+
+#: ../../options.rst:3
+msgid "Options"
+msgstr ""
+
+#: ../../options.rst:5
+msgid ""
+"You can customise the way the middleware works, options control various "
+"aspects of the middleware."
+msgstr ""
+
+#: ../../options.rst:9
+msgid "isSecure"
+msgstr ""
+
+#: ../../options.rst
+msgid "Summary"
+msgstr ""
+
+#: ../../options.rst:10
+msgid "enforces all requests to be HTTPS"
+msgstr ""
+
+#: ../../options.rst
+msgid "Types"
+msgstr ""
+
+#: ../../options.rst:11
+msgid "bool"
+msgstr ""
+
+#: ../../options.rst
+msgid "Default"
+msgstr ""
+
+#: ../../options.rst:12
+msgid "true"
+msgstr ""
+
+#: ../../options.rst:14
+msgid "This will throw a ``RuntimeException`` when a request is sent using HTTP"
+msgstr ""
+
+#: ../../options.rst:17
+msgid "relaxed"
+msgstr ""
+
+#: ../../options.rst:18
+msgid "A list of domains or IP addresses where not to enforce HTTPS"
+msgstr ""
+
+#: ../../options.rst:19
+msgid "string[]"
+msgstr ""
+
+#: ../../options.rst:27
+msgid ""
+"This is useful for development perposes but is **not recomended** for "
+"production"
+msgstr ""
+
+#: ../../options.rst:30
+msgid "header"
+msgstr ""
+
+#: ../../options.rst:32
+msgid "Controls the name of the header to search for the token"
+msgstr ""
+
+#: ../../options.rst:33 ../../options.rst:46 ../../options.rst:56
+msgid "string"
+msgstr ""
+
+#: ../../options.rst:34
+msgid "``Authorization``"
+msgstr ""
+
+#: ../../options.rst:36
+msgid ""
+"you way not want to always use the Authorization header you can change "
+"this with your own custom header."
+msgstr ""
+
+#: ../../options.rst:44
+msgid "cookie"
+msgstr ""
+
+#: ../../options.rst:45
+msgid "Controls the name of the cookie to search for the token"
+msgstr ""
+
+#: ../../options.rst:47 ../../options.rst:71
+msgid "``token``"
+msgstr ""
+
+#: ../../options.rst:54
+msgid "regexp"
+msgstr ""
+
+#: ../../options.rst:55
+msgid "Control how the token is found in the header and cookie"
+msgstr ""
+
+#: ../../options.rst:57
+msgid "``/Bearer\\\\s+(.*)$/i``"
+msgstr ""
+
+#: ../../options.rst:59
+msgid ""
+"You may want to change how the token is parsed from the header and "
+"cookie, one common use is to not including the bearer."
+msgstr ""
+
+#: ../../options.rst:67
+msgid "attribute"
+msgstr ""
+
+#: ../../options.rst:69
+msgid ""
+"Control what the attribute name where the decoded token is storged on the"
+" request"
+msgstr ""
+
+#: ../../options.rst:70
+msgid "string|null"
+msgstr ""
+
+#: ../../options.rst:82
+msgid "If set to null no attribute will be added to the requesst."
+msgstr ""
+
+#: ../../options.rst:85
+msgid "before"
+msgstr ""
+
+#: ../../options.rst:87
+msgid ""
+"Allows for modification of the request before passing it to the next "
+"handler"
+msgstr ""
+
+#: ../../options.rst:88
+msgid "BeforeHandlerInterface|null"
+msgstr ""
+
+#: ../../options.rst:89 ../../options.rst:117
+msgid "``none``"
+msgstr ""
+
+#: ../../options.rst:91
+msgid ""
+"Sometimes it's useful to modify the request to the next handler for "
+"example adding user infomation into the request for csutomer "
+"authorization handing. This must be an instanc of "
+"``BeforeHandlerInterface``"
+msgstr ""
+
+#: ../../options.rst:113
+msgid "after"
+msgstr ""
+
+#: ../../options.rst:115
+msgid "Allows for modification of the response from the next handler"
+msgstr ""
+
+#: ../../options.rst:116
+msgid "AfterHandlerInterface|null"
+msgstr ""
+
+#: ../../options.rst:119
+msgid ""
+"If you need to modify all response after the authentication middleware "
+"has executed you can do so by providing a instance of "
+"``AfterHandlerInterface``. This is mostly useful for adding additional "
+"response headers."
+msgstr ""
+

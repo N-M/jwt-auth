@@ -1,1210 +1,688 @@
 <?php
 
-/*
+declare(strict_types=1);
 
-Copyright (c) 2015-2022 Mika Tuupola
+namespace JimTools\JwtAuth\Test;
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-
-*/
+use Closure;
+use DateTimeImmutable;
+use Equip\Dispatch\MiddlewareCollection;
+use Firebase\JWT\JWT;
+use JimTools\JwtAuth\Decoder\DecoderInterface;
+use JimTools\JwtAuth\Decoder\FirebaseDecoder;
+use JimTools\JwtAuth\Exceptions\AuthorizationException;
+use JimTools\JwtAuth\Handlers\AfterHandlerInterface;
+use JimTools\JwtAuth\Handlers\BeforeHandlerInterface;
+use JimTools\JwtAuth\Middleware\JwtAuthentication;
+use JimTools\JwtAuth\Options;
+use JimTools\JwtAuth\Rules\RequestMethodRule;
+use JimTools\JwtAuth\Rules\RequestPathRule;
+use JimTools\JwtAuth\Secret;
+use Laminas\Diactoros\ResponseFactory;
+use Laminas\Diactoros\ServerRequestFactory;
+use Override;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\UsesClass;
+use PHPUnit\Framework\TestCase;
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
+use RuntimeException;
 
 /**
- * @see       https://github.com/tuupola/slim-jwt-auth
- * @see       https://appelsiini.net/projects/slim-jwt-auth
- * @license   https://www.opensource.org/licenses/mit-license.php
+ * @internal
  */
-
-namespace Tuupola\Middleware;
-
-use ArrayObject;
-use Equip\Dispatch\MiddlewareCollection;
-use PHPUnit\Framework\TestCase;
-use Psr\Http\Message\ServerRequestInterface;
-use Psr\Http\Message\ResponseInterface;
-use Tuupola\Http\Factory\ResponseFactory;
-use Tuupola\Http\Factory\ServerRequestFactory;
-use Tuupola\Http\Factory\StreamFactory;
-use Tuupola\Middleware\JwtAuthentication\RequestMethodRule;
-use Tuupola\Middleware\JwtAuthentication\RequestPathRule;
-
-class JwtAuthenticationTest extends TestCase
+#[CoversClass(JwtAuthentication::class)]
+#[UsesClass(Secret::class), UsesClass(Options::class), UsesClass(FirebaseDecoder::class)]
+#[UsesClass(RequestMethodRule::class), UsesClass(RequestPathRule::class), UsesClass(AuthorizationException::class)]
+final class JwtAuthenticationTest extends TestCase
 {
-    /* @codingStandardsIgnoreStart */
-    public static string $acmeToken = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiIsImtpZCI6ImFjbWUifQ.eyJpc3MiOiJBY21lIFRvb3RocGljcyBMdGQiLCJpYXQiOiIxNDI4ODE5OTQxIiwiZXhwIjoiMTc0NDM1Mjc0MSIsImF1ZCI6Ind3dy5leGFtcGxlLmNvbSIsInN1YiI6InNvbWVvbmVAZXhhbXBsZS5jb20iLCJzY29wZSI6WyJyZWFkIiwid3JpdGUiLCJkZWxldGUiXX0.yBhYlsMabKTh31taAiH8i2ScPMKm84jxIDNxft6EiTA";
-    public static string $betaToken = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiIsImtpZCI6ImJldGEifQ.eyJraWQiOiJiZXRhIiwiaXNzIjoiQmV0YSBTcG9uc29yc2hpcCBMdGQiLCJpYXQiOiIxNDI4ODE5OTQxIiwiZXhwIjoiMTc0NDM1Mjc0MSIsImF1ZCI6Ind3dy5leGFtcGxlLmNvbSIsInN1YiI6InNvbWVvbmVAZXhhbXBsZS5jb20iLCJzY29wZSI6WyJyZWFkIl19.msxcBx4_ZQtCkkjHyTDWDC0mac4cFNSxLqkzNL30JB8";
-    public static string $expired = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJBY21lIFRvb3RocGljcyBMdGQiLCJpYXQiOjE0Mjg4MTk5NDEsImV4cCI6MTQ4MDcyMzIwMCwiYXVkIjoid3d3LmV4YW1wbGUuY29tIiwic3ViIjoic29tZW9uZUBleGFtcGxlLmNvbSIsInNjb3BlIjpbInJlYWQiLCJ3cml0ZSIsImRlbGV0ZSJdfQ.ZydGEHVmca4ofQRCuMOfZrUXprAoe5GcySg4I-lwIjc";
-    /* @codingStandardsIgnoreEnd */
+    /** @codingStandardsIgnoreStart */
+    public static string $acmeToken = '';
+    public static string $betaToken = '';
+    public static string $expired = '';
 
+    /**
+     * @var array<string, mixed>
+     */
     public static array $acmeTokenArray = [
-        "iss" => "Acme Toothpics Ltd",
-        "iat" => "1428819941",
-        "exp" => "1744352741",
-        "aud" => "www.example.com",
-        "sub" => "someone@example.com",
-        "scope" => ["read", "write", "delete"]
+        'iss' => 'Acme Toothpics Ltd',
+        'aud' => 'www.example.com',
+        'sub' => 'someone@example.com',
+        'scope' => ['read', 'write', 'delete'],
     ];
 
+    /**
+     * @var array<string, mixed>
+     */
     public static array $betaTokenArray = [
-        "iss" => "Beta Sponsorship Ltd",
-        "iat" => "1428819941",
-        "exp" => "1744352741",
-        "aud" => "www.example.com",
-        "sub" => "someone@example.com",
-        "scope" => ["read"]
+        'iss' => 'Beta Sponsorship Ltd',
+        'aud' => 'www.example.com',
+        'sub' => 'someone@example.com',
+        'scope' => ['read'],
     ];
 
-    public function testShouldReturn401WithoutToken(): void
+    private JwtAuthentication $middleware;
+
+    private DecoderInterface $decoder;
+
+    public static function setUpBeforeClass(): void
     {
-        $request = (new ServerRequestFactory)
-            ->createServerRequest("GET", "https://example.com/api");
+        $data = [
+            'iat' => (new DateTimeImmutable())->getTimestamp(),
+            'exp' => (new DateTimeImmutable('+5 minutes'))->getTimestamp(),
+        ];
 
-        $default = function (RequestInterface $request) {
-            $response = (new ResponseFactory)->createResponse();
-            $response->getBody()->write("Success");
-            return $response;
-        };
+        self::$acmeTokenArray = array_merge(self::$acmeTokenArray, $data);
+        self::$betaTokenArray = array_merge(self::$betaTokenArray, $data);
 
-        $collection = new MiddlewareCollection([
-            $auth = new JwtAuthentication([
-                "secret" => "supersecretkeyyoushouldnotcommittogithub"
-            ])
-        ]);
+        self::$acmeToken = JWT::encode(self::$acmeTokenArray, 'supersecretkeyyoushouldnotcommittogithub', 'HS256', 'acme');
+        self::$betaToken = JWT::encode(self::$betaTokenArray, 'anothersecretkeyfornevertocommittogithub', 'HS256', 'beta');
+        self::$expired = JWT::encode(['exp' => (new DateTimeImmutable('-5 minutes'))->getTimestamp()], 'supersecretkeyyoushouldnotcommittogithub', 'HS256', 'acme');
+    }
 
-        $response = $collection->dispatch($request, $default);
+    #[Override]
+    protected function setUp(): void
+    {
+        $this->decoder = new FirebaseDecoder(
+            new Secret('supersecretkeyyoushouldnotcommittogithub', 'HS256', 'acme'),
+            new Secret('anothersecretkeyfornevertocommittogithub', 'HS256', 'beta'),
+        );
 
-        $this->assertEquals(401, $response->getStatusCode());
-        $this->assertEquals("", $response->getBody());
+        $this->middleware = new JwtAuthentication(new Options(), $this->decoder);
+    }
+
+    public function testShouldThrowAuthorizationExceptionWithoutToken(): void
+    {
+        $request = (new ServerRequestFactory())
+            ->createServerRequest('GET', 'https://example.com/api');
+        $collection = new MiddlewareCollection([$this->middleware]);
+
+        $this->expectException(AuthorizationException::class);
+        $this->expectExceptionMessage('Token not found.');
+        $collection->dispatch($request, $this->defaultclosure());
     }
 
     public function testShouldReturn200WithTokenFromHeader(): void
     {
-        $request = (new ServerRequestFactory)
-            ->createServerRequest("GET", "https://example.com/api")
-            ->withHeader("X-Token", "Bearer " . self::$acmeToken);
-
-        $default = function (ServerRequestInterface $request) {
-            $response = (new ResponseFactory)->createResponse();
-            $response->getBody()->write("Success");
-            return $response;
-        };
+        $request = (new ServerRequestFactory())
+            ->createServerRequest('GET', 'https://example.com/api')
+            ->withHeader('X-Token', 'Bearer ' . self::$acmeToken);
 
         $collection = new MiddlewareCollection([
-            new JwtAuthentication([
-                "secret" => "supersecretkeyyoushouldnotcommittogithub",
-                "header" => "X-Token"
-            ])
+            new JwtAuthentication(
+                new Options(header: 'X-Token'),
+                $this->decoder,
+            ),
         ]);
 
-        $response = $collection->dispatch($request, $default);
+        $response = $collection->dispatch($request, $this->defaultclosure());
 
-        $this->assertEquals(200, $response->getStatusCode());
-        $this->assertEquals("Success", $response->getBody());
+        self::assertSame(200, $response->getStatusCode());
+        self::assertSame('Success', (string) $response->getBody());
     }
 
     public function testShouldReturn200WithTokenFromHeaderWithCustomRegexp(): void
     {
-        $request = (new ServerRequestFactory)
-            ->createServerRequest("GET", "https://example.com/api")
-            ->withHeader("X-Token", self::$acmeToken);
-
-        $default = function (ServerRequestInterface $request) {
-            $response = (new ResponseFactory)->createResponse();
-            $response->getBody()->write("Success");
-            return $response;
-        };
+        $request = (new ServerRequestFactory())
+            ->createServerRequest('GET', 'https://example.com/api')
+            ->withHeader('X-Token', self::$acmeToken);
 
         $collection = new MiddlewareCollection([
-            new JwtAuthentication([
-                "secret" => "supersecretkeyyoushouldnotcommittogithub",
-                "header" => "X-Token",
-                "regexp" => "/(.*)/"
-            ])
+            new JwtAuthentication(
+                new Options(header: 'X-Token', regexp: '/(.*)/'),
+                $this->decoder
+            ),
         ]);
 
-        $response = $collection->dispatch($request, $default);
+        $response = $collection->dispatch($request, $this->defaultclosure());
 
-        $this->assertEquals(200, $response->getStatusCode());
-        $this->assertEquals("Success", $response->getBody());
+        self::assertSame(200, $response->getStatusCode());
+        self::assertSame('Success', (string) $response->getBody());
     }
 
     public function testShouldReturn200WithTokenFromCookie(): void
     {
-        $request = (new ServerRequestFactory)
-            ->createServerRequest("GET", "https://example.com/api")
-            ->withCookieParams(["nekot" => self::$acmeToken]);
-
-        $default = function (ServerRequestInterface $request) {
-            $response = (new ResponseFactory)->createResponse();
-            $response->getBody()->write("Success");
-            return $response;
-        };
+        $request = (new ServerRequestFactory())
+            ->createServerRequest('GET', 'https://example.com/api')
+            ->withCookieParams(['nekot' => self::$acmeToken]);
 
         $collection = new MiddlewareCollection([
-            new JwtAuthentication([
-                "secret" => "supersecretkeyyoushouldnotcommittogithub",
-                "cookie" => "nekot",
-            ])
+            new JwtAuthentication(
+                new Options(cookie: 'nekot'),
+                $this->decoder
+            ),
         ]);
 
-        $response = $collection->dispatch($request, $default);
+        $response = $collection->dispatch($request, $this->defaultclosure());
 
-        $this->assertEquals(200, $response->getStatusCode());
-        $this->assertEquals("Success", $response->getBody());
+        self::assertSame(200, $response->getStatusCode());
+        self::assertSame('Success', (string) $response->getBody());
     }
 
     public function testShouldReturn200WithTokenFromBearerCookie(): void
     {
-        $request = (new ServerRequestFactory)
-            ->createServerRequest("GET", "https://example.com/api")
-            ->withCookieParams(["nekot" => "Bearer " . self::$acmeToken]);
-
-        $default = function (ServerRequestInterface $request) {
-            $response = (new ResponseFactory)->createResponse();
-            $response->getBody()->write("Success");
-            return $response;
-        };
+        $request = (new ServerRequestFactory())
+            ->createServerRequest('GET', 'https://example.com/api')
+            ->withCookieParams(['nekot' => 'Bearer ' . self::$acmeToken]);
 
         $collection = new MiddlewareCollection([
-            new JwtAuthentication([
-                "secret" => "supersecretkeyyoushouldnotcommittogithub",
-                "cookie" => "nekot",
-            ])
+            new JwtAuthentication(
+                new Options(cookie: 'nekot'),
+                $this->decoder
+            ),
         ]);
 
-        $response = $collection->dispatch($request, $default);
+        $response = $collection->dispatch($request, $this->defaultclosure());
 
-        $this->assertEquals(200, $response->getStatusCode());
-        $this->assertEquals("Success", $response->getBody());
+        self::assertSame(200, $response->getStatusCode());
+        self::assertSame('Success', (string) $response->getBody());
     }
-
 
     public function testShouldReturn200WithSecretArray(): void
     {
-        $request = (new ServerRequestFactory)
-            ->createServerRequest("GET", "https://example.com/api")
-            ->withHeader("Authorization", "Bearer " . self::$betaToken);
+        $request = (new ServerRequestFactory())
+            ->createServerRequest('GET', 'https://example.com/api')
+            ->withHeader('Authorization', 'Bearer ' . self::$betaToken);
 
-        $default = function (ServerRequestInterface $request) {
-            $response = (new ResponseFactory)->createResponse();
-            $response->getBody()->write("Success");
-            return $response;
-        };
+        $collection = new MiddlewareCollection([$this->middleware]);
 
-        $collection = new MiddlewareCollection([
-            new JwtAuthentication([
-                "secret" => [
-                    "acme" =>"supersecretkeyyoushouldnotcommittogithub",
-                    "beta" =>"anothersecretkeyfornevertocommittogithub"
-                ],
-            ])
-        ]);
-
-        $response = $collection->dispatch($request, $default);
-        $this->assertEquals(200, $response->getStatusCode());
-        $this->assertEquals("Success", $response->getBody());
+        $response = $collection->dispatch($request, $this->defaultclosure());
+        self::assertSame(200, $response->getStatusCode());
+        self::assertSame('Success', (string) $response->getBody());
     }
 
-    public function testShouldReturn200WithSecretArrayCheckKid(): void
+    public function testShouldThrowExceptionWithWrongSecrets(): void
     {
-        $request = (new ServerRequestFactory)
-            ->createServerRequest("GET", "https://example.com/api")
-            ->withHeader("Authorization", "Bearer " . self::$betaToken);
-
-        $default = function (ServerRequestInterface $request) {
-            $response = (new ResponseFactory)->createResponse();
-            $response->getBody()->write("Success");
-            return $response;
-        };
+        $request = (new ServerRequestFactory())
+            ->createServerRequest('GET', 'https://example.com/api')
+            ->withHeader('Authorization', 'Bearer ' . self::$betaToken);
 
         $collection = new MiddlewareCollection([
-            new JwtAuthentication([
-                "algorithm" => ["acme" => "HS256", "beta" => "HS256"],
-                "secret" => [
-                    "acme" =>"supersecretkeyyoushouldnotcommittogithub",
-                    "beta" =>"anothersecretkeyfornevertocommittogithub"
-                ],
-            ])
+            new JwtAuthentication(
+                new Options(),
+                new FirebaseDecoder(
+                    new Secret('supersecretkeyyoushouldnotcommittogithub', 'HS256', 'xxxx'),
+                    new Secret('anothersecretkeyfornevertocommittogithub', 'HS256', 'yyyy'),
+                )
+            ),
         ]);
 
-        $response = $collection->dispatch($request, $default);
-        $this->assertEquals(200, $response->getStatusCode());
-        $this->assertEquals("Success", $response->getBody());
+        $this->expectException(AuthorizationException::class);
+        $collection->dispatch($request, $this->defaultclosure());
     }
 
-    public function testShouldReturn401WithSecretArray(): void
+    public function testShouldThrowExceptionnWithInvalidAlgorithm(): void
     {
-        $request = (new ServerRequestFactory)
-            ->createServerRequest("GET", "https://example.com/api")
-            ->withHeader("Authorization", "Bearer " . self::$betaToken);
-
-        $default = function (ServerRequestInterface $request) {
-            $response = (new ResponseFactory)->createResponse();
-            $response->getBody()->write("Success");
-            return $response;
-        };
+        $request = (new ServerRequestFactory())
+            ->createServerRequest('GET', 'https://example.com/api')
+            ->withHeader('Authorization', 'Bearer ' . self::$acmeToken);
 
         $collection = new MiddlewareCollection([
-            new JwtAuthentication([
-                "secret" => [
-                    "xxxx" =>"supersecretkeyyoushouldnotcommittogithub",
-                    "yyyy" =>"anothersecretkeyfornevertocommittogithub"
-                ]
-            ])
+            new JwtAuthentication(
+                new Options(),
+                new FirebaseDecoder(
+                    new Secret('supersecretkeyyoushouldnotcommittogithub', 'nosuch')
+                ),
+            ),
         ]);
 
-        $response = $collection->dispatch($request, $default);
-        $this->assertEquals(401, $response->getStatusCode());
-        $this->assertEquals("", $response->getBody());
-    }
-
-    public function testShouldReturn200WithSecretArrayAccess(): void
-    {
-        $request = (new ServerRequestFactory)
-            ->createServerRequest("GET", "https://example.com/api")
-            ->withHeader("Authorization", "Bearer " . self::$betaToken);
-
-        $default = function (ServerRequestInterface $request) {
-            $response = (new ResponseFactory)->createResponse();
-            $response->getBody()->write("Success");
-            return $response;
-        };
-
-        $secret = new ArrayObject();
-        $secret["acme"] = "supersecretkeyyoushouldnotcommittogithub";
-        $secret["beta"] ="anothersecretkeyfornevertocommittogithub";
-
-        $collection = new MiddlewareCollection([
-            new JwtAuthentication([
-                "secret" => $secret,
-            ])
-        ]);
-
-        $response = $collection->dispatch($request, $default);
-        $this->assertEquals(200, $response->getStatusCode());
-        $this->assertEquals("Success", $response->getBody());
-    }
-
-    public function testShouldReturn401WithSecretArrayAccess(): void
-    {
-        $request = (new ServerRequestFactory)
-            ->createServerRequest("GET", "https://example.com/api")
-            ->withHeader("Authorization", "Bearer " . self::$betaToken);
-
-        $default = function (ServerRequestInterface $request) {
-            $response = (new ResponseFactory)->createResponse();
-            $response->getBody()->write("Success");
-            return $response;
-        };
-
-        $secret = new ArrayObject();
-        $secret["xxxx"] = "supersecretkeyyoushouldnotcommittogithub";
-        $secret["yyyy"] = "anothersecretkeyfornevertocommittogithub";
-
-        $collection = new MiddlewareCollection([
-            new JwtAuthentication([
-                "secret" => $secret,
-            ])
-        ]);
-
-        $response = $collection->dispatch($request, $default);
-        $this->assertEquals(401, $response->getStatusCode());
-        $this->assertEquals("", $response->getBody());
-    }
-
-    public function testShouldAlterResponseWithAnonymousAfter(): void
-    {
-        $request = (new ServerRequestFactory)
-            ->createServerRequest("GET", "https://example.com/api")
-            ->withHeader("Authorization", "Bearer " . self::$acmeToken);
-
-        $default = function (ServerRequestInterface $request) {
-            $response = (new ResponseFactory)->createResponse();
-            $response->getBody()->write("Success");
-            return $response;
-        };
-
-        $collection = new MiddlewareCollection([
-            new JwtAuthentication([
-                "secret" => "supersecretkeyyoushouldnotcommittogithub",
-                "after" => function ($response, $arguments) {
-                    return $response->withHeader("X-Brawndo", "plants crave");
-                }
-            ])
-        ]);
-
-        $response = $collection->dispatch($request, $default);
-
-        $this->assertEquals(200, $response->getStatusCode());
-        $this->assertEquals("plants crave", (string) $response->getHeaderLine("X-Brawndo"));
-    }
-
-    public function testShouldAlterResponseWithInvokableAfter(): void
-    {
-        $request = (new ServerRequestFactory)
-            ->createServerRequest("GET", "https://example.com/api")
-            ->withHeader("Authorization", "Bearer " . self::$acmeToken);
-
-        $default = function (ServerRequestInterface $request) {
-            $response = (new ResponseFactory)->createResponse();
-            $response->getBody()->write("Success");
-            return $response;
-        };
-
-        $collection = new MiddlewareCollection([
-            new JwtAuthentication([
-                "secret" => "supersecretkeyyoushouldnotcommittogithub",
-                "after" => new TestAfterHandler
-            ])
-        ]);
-
-        $response = $collection->dispatch($request, $default);
-
-        $this->assertEquals(200, $response->getStatusCode());
-        $this->assertEquals(
-            "plants crave",
-            (string) $response->getHeaderLine("X-Brawndo")
-        );
-    }
-
-    public function testShouldAlterResponseWithArrayNotationAfter(): void
-    {
-        $request = (new ServerRequestFactory)
-            ->createServerRequest("GET", "https://example.com/api")
-            ->withHeader("Authorization", "Bearer " . self::$acmeToken);
-
-        $default = function (ServerRequestInterface $request) {
-            $response = (new ResponseFactory)->createResponse();
-            $response->getBody()->write("Success");
-            return $response;
-        };
-
-        $collection = new MiddlewareCollection([
-            new JwtAuthentication([
-                "secret" => "supersecretkeyyoushouldnotcommittogithub",
-                "after" => [TestAfterHandler::class, "after"]
-            ])
-        ]);
-
-        $response = $collection->dispatch($request, $default);
-
-        $this->assertEquals(200, $response->getStatusCode());
-        $this->assertEquals(
-            "like from toilet?",
-            (string) $response->getHeaderLine("X-Water")
-        );
-    }
-
-    public function testShouldReturn401WithInvalidAlgorithm(): void
-    {
-        $request = (new ServerRequestFactory)
-            ->createServerRequest("GET", "https://example.com/api")
-            ->withHeader("Authorization", "Bearer " . self::$acmeToken);
-
-        $default = function (ServerRequestInterface $request) {
-            $response = (new ResponseFactory)->createResponse();
-            $response->getBody()->write("Success");
-            return $response;
-        };
-
-        $collection = new MiddlewareCollection([
-            new JwtAuthentication([
-                "secret" => "supersecretkeyyoushouldnotcommittogithub",
-                "algorithm" => "nosuch",
-            ])
-        ]);
-
-        $response = $collection->dispatch($request, $default);
-
-        $this->assertEquals(401, $response->getStatusCode());
-        $this->assertEquals("", $response->getBody());
+        $this->expectException(AuthorizationException::class);
+        $collection->dispatch($request, $this->defaultclosure());
     }
 
     public function testShouldReturn200WithOptions(): void
     {
-        $request = (new ServerRequestFactory)
-            ->createServerRequest("GET", "https://example.com/api")
-            ->withMethod("OPTIONS");
+        $request = (new ServerRequestFactory())
+            ->createServerRequest('GET', 'https://example.com/api')
+            ->withMethod('OPTIONS');
 
-        $default = function (ServerRequestInterface $request) {
-            $response = (new ResponseFactory)->createResponse();
-            $response->getBody()->write("Success");
-            return $response;
-        };
+        $collection = new MiddlewareCollection([$this->middleware]);
 
-        $collection = new MiddlewareCollection([
-            new JwtAuthentication([
-                "secret" => "supersecretkeyyoushouldnotcommittogithub"
-            ])
-        ]);
+        $response = $collection->dispatch($request, $this->defaultclosure());
 
-        $response = $collection->dispatch($request, $default);
-
-        $this->assertEquals(200, $response->getStatusCode());
-        $this->assertEquals("Success", $response->getBody());
+        self::assertSame(200, $response->getStatusCode());
+        self::assertSame('Success', (string) $response->getBody());
     }
 
-    public function testShouldReturn400WithInvalidToken(): void
+    public function testShouldThrowExceptionWithInvalidToken(): void
     {
-        $request = (new ServerRequestFactory)
-            ->createServerRequest("GET", "https://example.com/api")
-            ->withHeader("Authorization", "Bearer invalid" . self::$acmeToken);
+        $request = (new ServerRequestFactory())
+            ->createServerRequest('GET', 'https://example.com/api')
+            ->withHeader('Authorization', 'Bearer invalid' . self::$acmeToken);
 
-        $default = function (ServerRequestInterface $request) {
-            $response = (new ResponseFactory)->createResponse();
-            $response->getBody()->write("Success");
-            return $response;
-        };
+        $collection = new MiddlewareCollection([$this->middleware]);
 
-        $collection = new MiddlewareCollection([
-            new JwtAuthentication([
-                "secret" => "supersecretkeyyoushouldnotcommittogithub"
-            ])
-        ]);
-
-        $response = $collection->dispatch($request, $default);
-
-        $this->assertEquals(401, $response->getStatusCode());
-        $this->assertEquals("", $response->getBody());
+        $this->expectException(AuthorizationException::class);
+        $collection->dispatch($request, $this->defaultclosure());
     }
 
-    public function testShouldReturn400WithExpiredToken(): void
+    public function testShouldThrowExceptionWithExpiredToken(): void
     {
-        $request = (new ServerRequestFactory)
-            ->createServerRequest("GET", "https://example.com/api")
-            ->withHeader("Authorization", "Bearer " . self::$expired);
+        $request = (new ServerRequestFactory())
+            ->createServerRequest('GET', 'https://example.com/api')
+            ->withHeader('Authorization', 'Bearer ' . self::$expired);
 
-        $default = function (ServerRequestInterface $request) {
-            $response = (new ResponseFactory)->createResponse();
-            $response->getBody()->write("Success");
-            return $response;
-        };
+        $collection = new MiddlewareCollection([$this->middleware]);
 
-        $collection = new MiddlewareCollection([
-            new JwtAuthentication([
-                "secret" => "supersecretkeyyoushouldnotcommittogithub"
-            ])
-        ]);
-
-        $response = $collection->dispatch($request, $default);
-
-        $this->assertEquals(401, $response->getStatusCode());
-        $this->assertEquals("", $response->getBody());
+        $this->expectException(AuthorizationException::class);
+        $collection->dispatch($request, $this->defaultclosure());
     }
 
     public function testShouldReturn200WithoutTokenWithPath(): void
     {
-        $request = (new ServerRequestFactory)
-            ->createServerRequest("GET", "https://example.com/public");
-
-        $default = function (ServerRequestInterface $request) {
-            $response = (new ResponseFactory)->createResponse();
-            $response->getBody()->write("Success");
-            return $response;
-        };
+        $request = (new ServerRequestFactory())
+            ->createServerRequest('GET', 'https://example.com/public');
 
         $collection = new MiddlewareCollection([
-            new JwtAuthentication([
-                "path" => ["/api", "/foo"],
-                "secret" => "supersecretkeyyoushouldnotcommittogithub"
-            ])
+            new JwtAuthentication(
+                new Options(),
+                $this->decoder,
+                [new RequestMethodRule(), new RequestPathRule(['/api', '/foo'])],
+            ),
         ]);
 
-        $response = $collection->dispatch($request, $default);
+        $response = $collection->dispatch($request, $this->defaultclosure());
 
-        $this->assertEquals(200, $response->getStatusCode());
-        $this->assertEquals("Success", $response->getBody());
+        self::assertSame(200, $response->getStatusCode());
+        self::assertSame('Success', (string) $response->getBody());
     }
 
     public function testShouldReturn200WithoutTokenWithIgnore(): void
     {
-        $request = (new ServerRequestFactory)
-            ->createServerRequest("GET", "https://example.com/api/ping");
-
-        $default = function (ServerRequestInterface $request) {
-            $response = (new ResponseFactory)->createResponse();
-            $response->getBody()->write("Success");
-            return $response;
-        };
+        $request = (new ServerRequestFactory())
+            ->createServerRequest('GET', 'https://example.com/api/ping');
 
         $collection = new MiddlewareCollection([
-            new JwtAuthentication([
-                "path" => ["/api", "/foo"],
-                "ignore" => ["/api/ping"],
-                "secret" => "supersecretkeyyoushouldnotcommittogithub"
-            ])
+            new JwtAuthentication(
+                new Options(),
+                $this->decoder,
+                [
+                    new RequestMethodRule(),
+                    new RequestPathRule(['/api', '/foo'], ['/api/ping']),
+                ]
+            ),
         ]);
 
-        $response = $collection->dispatch($request, $default);
+        $response = $collection->dispatch($request, $this->defaultclosure());
 
-        $this->assertEquals(200, $response->getStatusCode());
-        $this->assertEquals("Success", $response->getBody());
+        self::assertSame(200, $response->getStatusCode());
+        self::assertSame('Success', (string) $response->getBody());
     }
 
     public function testShouldNotAllowInsecure(): void
     {
-        $this->expectException("RuntimeException");
+        $this->expectException(RuntimeException::class);
 
-        $request = (new ServerRequestFactory)
-            ->createServerRequest("GET", "http://example.com/api")
-            ->withHeader("Authorization", "Bearer " . self::$acmeToken);
+        $request = (new ServerRequestFactory())
+            ->createServerRequest('GET', 'http://example.com/api')
+            ->withHeader('Authorization', 'Bearer ' . self::$acmeToken);
 
-        $default = function (ServerRequestInterface $request) {
-            $response = (new ResponseFactory)->createResponse();
-            $response->getBody()->write("Success");
-            return $response;
-        };
+        $collection = new MiddlewareCollection([$this->middleware]);
 
-        $collection = new MiddlewareCollection([
-            new JwtAuthentication([
-                "secret" => "supersecretkeyyoushouldnotcommittogithub"
-            ])
-        ]);
-
-        $response = $collection->dispatch($request, $default);
+        $response = $collection->dispatch($request, $this->defaultclosure());
     }
 
     public function testShouldAllowInsecure(): void
     {
-        $request = (new ServerRequestFactory)
-            ->createServerRequest("GET", "http://example.com/api")
-            ->withHeader("Authorization", "Bearer " . self::$acmeToken);
-
-        $default = function (ServerRequestInterface $request) {
-            $response = (new ResponseFactory)->createResponse();
-            $response->getBody()->write("Success");
-            return $response;
-        };
+        $request = (new ServerRequestFactory())
+            ->createServerRequest('GET', 'http://example.com/api')
+            ->withHeader('Authorization', 'Bearer ' . self::$acmeToken);
 
         $collection = new MiddlewareCollection([
-            new JwtAuthentication([
-                "secret" => "supersecretkeyyoushouldnotcommittogithub",
-                "secure" => false
-            ])
+            new JwtAuthentication(
+                new Options(isSecure: false),
+                $this->decoder
+            ),
         ]);
 
-        $response = $collection->dispatch($request, $default);
+        $response = $collection->dispatch($request, $this->defaultclosure());
 
-        $this->assertEquals(200, $response->getStatusCode());
-        $this->assertEquals("Success", $response->getBody());
+        self::assertSame(200, $response->getStatusCode());
+        self::assertSame('Success', (string) $response->getBody());
     }
 
     public function testShouldRelaxInsecureInLocalhost(): void
     {
-        $request = (new ServerRequestFactory)
-            ->createServerRequest("GET", "http://localhost/api")
-            ->withHeader("Authorization", "Bearer " . self::$acmeToken);
+        $request = (new ServerRequestFactory())
+            ->createServerRequest('GET', 'http://localhost/api')
+            ->withHeader('Authorization', 'Bearer ' . self::$acmeToken);
 
-        $default = function (ServerRequestInterface $request) {
-            $response = (new ResponseFactory)->createResponse();
-            $response->getBody()->write("Success");
-            return $response;
-        };
+        $collection = new MiddlewareCollection([$this->middleware]);
 
-        $collection = new MiddlewareCollection([
-            new JwtAuthentication([
-                "secret" => "supersecretkeyyoushouldnotcommittogithub"
-            ])
-        ]);
+        $response = $collection->dispatch($request, $this->defaultclosure());
 
-        $response = $collection->dispatch($request, $default);
-
-        $this->assertEquals(200, $response->getStatusCode());
-        $this->assertEquals("Success", $response->getBody());
+        self::assertSame(200, $response->getStatusCode());
+        self::assertSame('Success', (string) $response->getBody());
     }
 
     public function testShouldRelaxInsecureInExampleCom(): void
     {
-        $request = (new ServerRequestFactory)
-            ->createServerRequest("GET", "http://example.com/api")
-            ->withHeader("Authorization", "Bearer " . self::$acmeToken);
-
-        $default = function (ServerRequestInterface $request) {
-            $response = (new ResponseFactory)->createResponse();
-            $response->getBody()->write("Success");
-            return $response;
-        };
+        $request = (new ServerRequestFactory())
+            ->createServerRequest('GET', 'http://example.com/api')
+            ->withHeader('Authorization', 'Bearer ' . self::$acmeToken);
 
         $collection = new MiddlewareCollection([
-            new JwtAuthentication([
-                "secret" => "supersecretkeyyoushouldnotcommittogithub",
-                "relaxed" => ["example.com"],
-            ])
+            new JwtAuthentication(
+                new Options(relaxed: ['example.com']),
+                $this->decoder,
+            ),
         ]);
 
-        $response = $collection->dispatch($request, $default);
+        $response = $collection->dispatch($request, $this->defaultclosure());
 
-        $this->assertEquals(200, $response->getStatusCode());
-        $this->assertEquals("Success", $response->getBody());
+        self::assertSame(200, $response->getStatusCode());
+        self::assertSame('Success', (string) $response->getBody());
     }
 
     public function testShouldAttachToken(): void
     {
-        $request = (new ServerRequestFactory)
-            ->createServerRequest("GET", "https://example.com/api")
-            ->withHeader("Authorization", "Bearer " . self::$acmeToken);
+        $request = (new ServerRequestFactory())
+            ->createServerRequest('GET', 'https://example.com/api')
+            ->withHeader('Authorization', 'Bearer ' . self::$acmeToken);
 
-        $default = function (ServerRequestInterface $request) {
-            $acmeToken = $request->getAttribute("token");
+        $default = static function (ServerRequestInterface $request) {
+            /** @var array<string, mixed> */
+            $acmeToken = $request->getAttribute('token');
 
-            $response = (new ResponseFactory)->createResponse();
-            $response->getBody()->write($acmeToken["iss"]);
+            $response = (new ResponseFactory())->createResponse();
+            $response->getBody()->write($acmeToken['iss']);
 
             return $response;
         };
 
-        $collection = new MiddlewareCollection([
-            new JwtAuthentication([
-                "secret" => "supersecretkeyyoushouldnotcommittogithub"
-            ])
-        ]);
+        $collection = new MiddlewareCollection([$this->middleware]);
 
         $response = $collection->dispatch($request, $default);
 
-        $this->assertEquals(200, $response->getStatusCode());
-        $this->assertEquals("Acme Toothpics Ltd", $response->getBody());
+        self::assertSame(200, $response->getStatusCode());
+        self::assertSame('Acme Toothpics Ltd', (string) $response->getBody());
     }
 
     public function testShouldAttachCustomToken(): void
     {
-        $request = (new ServerRequestFactory)
-            ->createServerRequest("GET", "https://example.com/api")
-            ->withHeader("Authorization", "Bearer " . self::$acmeToken);
+        $request = (new ServerRequestFactory())
+            ->createServerRequest('GET', 'https://example.com/api')
+            ->withHeader('Authorization', 'Bearer ' . self::$acmeToken);
 
-        $default = function (ServerRequestInterface $request) {
-            $acmeToken = $request->getAttribute("nekot");
+        $default = static function (ServerRequestInterface $request) {
+            /** @var array<string, mixed>$acmeToken */
+            $acmeToken = $request->getAttribute('nekot');
 
-            $response = (new ResponseFactory)->createResponse();
-            $response->getBody()->write($acmeToken["iss"]);
+            $response = (new ResponseFactory())->createResponse();
+            $response->getBody()->write($acmeToken['iss']);
 
             return $response;
         };
 
         $collection = new MiddlewareCollection([
-            new JwtAuthentication([
-                "secret" => "supersecretkeyyoushouldnotcommittogithub",
-                "attribute" => "nekot"
-            ])
+            new JwtAuthentication(
+                new Options(attribute: 'nekot'),
+                $this->decoder
+            ),
         ]);
 
         $response = $collection->dispatch($request, $default);
 
-        $this->assertEquals(200, $response->getStatusCode());
-        $this->assertEquals("Acme Toothpics Ltd", $response->getBody());
+        self::assertSame(200, $response->getStatusCode());
+        self::assertSame('Acme Toothpics Ltd', (string) $response->getBody());
     }
 
     public function testShouldCallAfterWithProperArguments(): void
     {
-        $request = (new ServerRequestFactory)
-            ->createServerRequest("GET", "https://example.com/api")
-            ->withHeader("Authorization", "Bearer " . self::$acmeToken);
-
-        $decoded = null;
-        $token = null;
-
-        $default = function (ServerRequestInterface $request) {
-            $response = (new ResponseFactory)->createResponse();
-            $response->getBody()->write("Success");
-            return $response;
-        };
+        $request = (new ServerRequestFactory())
+            ->createServerRequest('GET', 'https://example.com/api')
+            ->withHeader('Authorization', 'Bearer ' . self::$acmeToken);
 
         $collection = new MiddlewareCollection([
-            new JwtAuthentication([
-                "secret" => "supersecretkeyyoushouldnotcommittogithub",
-                "after" => function ($response, $arguments) use (&$decoded, &$token) {
-                    $decoded = $arguments["decoded"];
-                    $token = $arguments["token"];
-                }
-            ])
+            new JwtAuthentication(
+                new Options(after: $this->afterHandler()),
+                $this->decoder,
+            ),
         ]);
 
-        $response = $collection->dispatch($request, $default);
+        $response = $collection->dispatch($request, $this->defaultclosure());
 
-        $this->assertEquals(200, $response->getStatusCode());
-        $this->assertEquals("Success", $response->getBody());
-        $this->assertEquals(self::$acmeTokenArray, (array) $decoded);
-        $this->assertEquals(self::$acmeToken, $token);
+        /** @var array{decoded: array<string, mixed>, token: string} */
+        $data = json_decode((string) $response->getBody(), true);
+
+        self::assertSame(200, $response->getStatusCode());
+        self::assertSame('plants crave', $response->getHeaderLine('X-Brawndo'));
+        self::assertSame(self::$acmeTokenArray, $data['decoded']);
+        self::assertSame(self::$acmeToken, $data['token']);
     }
 
     public function testShouldCallBeforeWithProperArguments(): void
     {
-        $request = (new ServerRequestFactory)
-            ->createServerRequest("GET", "https://example.com/api")
-            ->withHeader("Authorization", "Bearer " . self::$acmeToken);
+        $request = (new ServerRequestFactory())
+            ->createServerRequest('GET', 'https://example.com/api')
+            ->withHeader('Authorization', 'Bearer ' . self::$acmeToken);
 
-        $decoded = null;
-        $token = null;
+        $default = static function (ServerRequestInterface $request) {
+            $response = (new ResponseFactory())->createResponse();
+            $response->getBody()->write(json_encode($request->getParsedBody(), JSON_THROW_ON_ERROR));
 
-        $default = function (ServerRequestInterface $request) {
-            $response = (new ResponseFactory)->createResponse();
-            $response->getBody()->write("Success");
             return $response;
         };
 
         $collection = new MiddlewareCollection([
-            new JwtAuthentication([
-                "secret" => "supersecretkeyyoushouldnotcommittogithub",
-                "before" => function ($response, $arguments) use (&$decoded, &$token) {
-                    $decoded = $arguments["decoded"];
-                    $token = $arguments["token"];
-                }
-            ])
+            new JwtAuthentication(
+                new Options(before: $this->beforeHandler()),
+                $this->decoder
+            ),
         ]);
 
         $response = $collection->dispatch($request, $default);
 
-        $this->assertEquals(200, $response->getStatusCode());
-        $this->assertEquals("Success", $response->getBody());
-        $this->assertEquals(self::$acmeTokenArray, (array) $decoded);
-        $this->assertEquals(self::$acmeToken, $token);
-    }
+        /** @var array{decoded: array<string, mixed>, token: string} */
+        $data = json_decode((string) $response->getBody(), true);
 
-    public function testShouldCallAnonymousErrorFunction(): void
-    {
-        $request = (new ServerRequestFactory)
-            ->createServerRequest("GET", "https://example.com/api");
-
-        $default = function (ServerRequestInterface $request) {
-            $response = (new ResponseFactory)->createResponse();
-            $response->getBody()->write("Success");
-            return $response;
-        };
-
-        $collection = new MiddlewareCollection([
-            new JwtAuthentication([
-                "secret" => "supersecretkeyyoushouldnotcommit",
-                "error" => function (ResponseInterface $response, $arguments) use (&$dummy) {
-                    $response->getBody()->write("error");
-                    return $response
-                        ->withHeader("X-Electrolytes", "Plants");
-                }
-            ])
-        ]);
-
-        $response = $collection->dispatch($request, $default);
-
-        $this->assertEquals(401, $response->getStatusCode());
-        $this->assertEquals("Plants", $response->getHeaderLine("X-Electrolytes"));
-        $this->assertEquals("error", $response->getBody());
-    }
-
-    public function testShouldCallInvokableErrorClass(): void
-    {
-        $request = (new ServerRequestFactory)
-            ->createServerRequest("GET", "https://example.com/api");
-
-        $dummy = null;
-
-        $default = function (ServerRequestInterface $request) {
-            $response = (new ResponseFactory)->createResponse();
-            $response->getBody()->write("Success");
-            return $response;
-        };
-
-        $collection = new MiddlewareCollection([
-            new JwtAuthentication([
-                "secret" => "supersecretkeyyoushouldnotcommit",
-                "error" => new TestErrorHandler
-            ])
-        ]);
-
-        $response = $collection->dispatch($request, $default);
-
-        $this->assertEquals(402, $response->getStatusCode());
-        $this->assertEquals("Bar", $response->getHeaderLine("X-Foo"));
-        $this->assertEquals(TestErrorHandler::class, $response->getBody());
-    }
-
-    public function testShouldCallArrayNotationError(): void
-    {
-        $request = (new ServerRequestFactory)
-            ->createServerRequest("GET", "https://example.com/api");
-
-        $dummy = null;
-
-        $default = function (ServerRequestInterface $request) {
-            $response = (new ResponseFactory)->createResponse();
-            $response->getBody()->write("Success");
-            return $response;
-        };
-
-        $collection = new MiddlewareCollection([
-            new JwtAuthentication([
-                "secret" => "supersecretkeyyoushouldnotcommit",
-                "error" => [TestErrorHandler::class, "error"]
-            ])
-        ]);
-
-        $response = $collection->dispatch($request, $default);
-
-        $this->assertEquals(418, $response->getStatusCode());
-        $this->assertEquals("Foo", $response->getHeaderLine("X-Bar"));
-        $this->assertEquals(TestErrorHandler::class, $response->getBody());
-    }
-
-    public function testShouldCallErrorAndModifyBody(): void
-    {
-        $request = (new ServerRequestFactory)
-            ->createServerRequest("GET", "https://example.com/api");
-
-        $dummy = null;
-
-        $default = function (ServerRequestInterface $request) {
-            $response = (new ResponseFactory)->createResponse();
-            $response->getBody()->write("Success");
-            return $response;
-        };
-
-        $collection = new MiddlewareCollection([
-            new JwtAuthentication([
-                "secret" => "supersecretkeyyoushouldnotcommittogithub",
-                "error" => function (ResponseInterface $response, $arguments) use (&$dummy) {
-                    $dummy = true;
-                    $response->getBody()->write("Error");
-                    return $response;
-                }
-            ])
-        ]);
-
-        $response = $collection->dispatch($request, $default);
-
-        $this->assertEquals(401, $response->getStatusCode());
-        $this->assertEquals("Error", $response->getBody());
-        $this->assertTrue($dummy);
+        self::assertSame(200, $response->getStatusCode());
+        self::assertSame(self::$acmeTokenArray, (array) $data['decoded']);
+        self::assertSame(self::$acmeToken, $data['token']);
     }
 
     public function testShouldAllowUnauthenticatedHttp(): void
     {
-
-        $request = (new ServerRequestFactory)
-            ->createServerRequest("GET", "https://example.com/public/foo");
-
-        $default = function (ServerRequestInterface $request) {
-            $response = (new ResponseFactory)->createResponse();
-            $response->getBody()->write("Success");
-            return $response;
-        };
+        $request = (new ServerRequestFactory())
+            ->createServerRequest('GET', 'https://example.com/public/foo');
 
         $collection = new MiddlewareCollection([
-            new JwtAuthentication([
-                "secret" => "supersecretkeyyoushouldnotcommittogithub",
-                "path" => ["/api", "/bar"],
-            ])
+            new JwtAuthentication(
+                new Options(),
+                $this->decoder,
+                [new RequestMethodRule(), new RequestPathRule(['/api', '/bar'])]
+            ),
         ]);
 
-        $response = $collection->dispatch($request, $default);
+        $response = $collection->dispatch($request, $this->defaultclosure());
 
-        $this->assertEquals(200, $response->getStatusCode());
-        $this->assertEquals("Success", $response->getBody());
-    }
-
-    public function testShouldReturn401FromAfter(): void
-    {
-        $request = (new ServerRequestFactory)
-            ->createServerRequest("GET", "https://example.com/api")
-            ->withHeader("Authorization", "Bearer " . self::$acmeToken);
-
-        $default = function (ServerRequestInterface $request) {
-            $response = (new ResponseFactory)->createResponse();
-            $response->getBody()->write("Success");
-            return $response;
-        };
-
-        $collection = new MiddlewareCollection([
-            new JwtAuthentication([
-                "secret" => "supersecretkeyyoushouldnotcommittogithub",
-                "after" => function ($response, $arguments) {
-                    return $response
-                        ->withBody((new StreamFactory)->createStream())
-                        ->withStatus(401);
-                }
-            ])
-        ]);
-
-        $response = $collection->dispatch($request, $default);
-
-        $this->assertEquals(401, $response->getStatusCode());
-        $this->assertEquals("", $response->getBody());
-    }
-
-    public function testShouldModifyRequestUsingAnonymousBefore(): void
-    {
-        $request = (new ServerRequestFactory)
-            ->createServerRequest("GET", "https://example.com/")
-            ->withHeader("Authorization", "Bearer " . self::$acmeToken);
-
-        $default = function (ServerRequestInterface $request) {
-            $response = (new ResponseFactory)->createResponse();
-            $test = $request->getAttribute("test");
-            $response->getBody()->write($test);
-            return $response;
-        };
-
-        $collection = new MiddlewareCollection([
-            new JwtAuthentication([
-                "secret" => "supersecretkeyyoushouldnotcommittogithub",
-                "before" => function ($request, $arguments) {
-                    return $request->withAttribute("test", "test");
-                }
-            ])
-        ]);
-
-        $response = $collection->dispatch($request, $default);
-
-        $this->assertEquals(200, $response->getStatusCode());
-        $this->assertEquals("test", (string) $response->getBody());
-    }
-
-    public function testShouldModifyRequestUsingInvokableBefore(): void
-    {
-        $request = (new ServerRequestFactory)
-            ->createServerRequest("GET", "https://example.com/")
-            ->withHeader("Authorization", "Bearer " . self::$acmeToken);
-
-        $default = function (ServerRequestInterface $request) {
-            $response = (new ResponseFactory)->createResponse();
-            $test = $request->getAttribute("test");
-            $response->getBody()->write($test);
-            return $response;
-        };
-
-        $collection = new MiddlewareCollection([
-            new JwtAuthentication([
-                "secret" => "supersecretkeyyoushouldnotcommittogithub",
-                "before" => new TestBeforeHandler
-            ])
-        ]);
-
-        $response = $collection->dispatch($request, $default);
-
-        $this->assertEquals(200, $response->getStatusCode());
-        $this->assertEquals("invoke", (string) $response->getBody());
-    }
-
-    public function testShouldModifyRequestUsingArrayNotationBefore(): void
-    {
-        $request = (new ServerRequestFactory)
-            ->createServerRequest("GET", "https://example.com/")
-            ->withHeader("Authorization", "Bearer " . self::$acmeToken);
-
-        $default = function (ServerRequestInterface $request) {
-            $response = (new ResponseFactory)->createResponse();
-            $test = $request->getAttribute("test");
-            $response->getBody()->write($test);
-            return $response;
-        };
-
-        $collection = new MiddlewareCollection([
-            new JwtAuthentication([
-                "secret" => "supersecretkeyyoushouldnotcommittogithub",
-                "before" => [TestBeforeHandler::class, "before"]
-            ])
-        ]);
-
-        $response = $collection->dispatch($request, $default);
-
-        $this->assertEquals(200, $response->getStatusCode());
-        $this->assertEquals("function", (string) $response->getBody());
+        self::assertSame(200, $response->getStatusCode());
+        self::assertSame('Success', (string) $response->getBody());
     }
 
     public function testShouldHandleRulesArrayBug84(): void
     {
-        $request = (new ServerRequestFactory)
-            ->createServerRequest("GET", "https://example.com/api");
-
-        $default = function (ServerRequestInterface $request) {
-            $response = (new ResponseFactory)->createResponse();
-            $response->getBody()->write("Success");
-            return $response;
-        };
+        $request = (new ServerRequestFactory())
+            ->createServerRequest('GET', 'https://example.com/api');
 
         $collection = new MiddlewareCollection([
-            new JwtAuthentication([
-                "secret" => "supersecretkeyyoushouldnotcommittogithub",
-                "rules" => [
-                    new RequestPathRule([
-                        "path" => ["/api"],
-                        "ignore" => ["/api/login"],
-                    ]),
-                    new RequestMethodRule([
-                        "ignore" => ["OPTIONS"],
-                    ])
+            new JwtAuthentication(
+                new Options(),
+                $this->decoder,
+                [
+                    new RequestPathRule(['/api'], ['/api/login']),
+                    new RequestMethodRule(),
                 ],
-            ])
+            ),
         ]);
 
-        $response = $collection->dispatch($request, $default);
+        $this->expectException(AuthorizationException::class);
+        $collection->dispatch($request, $this->defaultclosure());
 
-        $this->assertEquals(401, $response->getStatusCode());
-        $this->assertEquals("", $response->getBody());
+        $request = (new ServerRequestFactory())
+            ->createServerRequest('GET', 'https://example.com/api/login');
 
-        $request = (new ServerRequestFactory)
-            ->createServerRequest("GET", "https://example.com/api/login");
+        $response = $collection->dispatch($request, $this->defaultclosure());
 
-        $response = $collection->dispatch($request, $default);
+        self::assertSame(200, $response->getStatusCode());
+        self::assertSame('Success', (string) $response->getBody());
+    }
 
-        $this->assertEquals(200, $response->getStatusCode());
-        $this->assertEquals("Success", $response->getBody());
+    public function testShouldHandleRulesArrayBug84HappyPath(): void
+    {
+        $collection = new MiddlewareCollection([
+            new JwtAuthentication(
+                new Options(),
+                $this->decoder,
+                [
+                    new RequestPathRule(['/api'], ['/api/login']),
+                    new RequestMethodRule(),
+                ],
+            ),
+        ]);
+
+        $request = (new ServerRequestFactory())
+            ->createServerRequest('GET', 'https://example.com/api/login');
+
+        $response = $collection->dispatch($request, $this->defaultclosure());
+
+        self::assertSame(200, $response->getStatusCode());
+        self::assertSame('Success', (string) $response->getBody());
     }
 
     public function testShouldHandleDefaultPathBug118(): void
     {
-        $request = (new ServerRequestFactory)
-            ->createServerRequest("GET", "https://example.com/api");
-
-        $default = function (ServerRequestInterface $request) {
-            $response = (new ResponseFactory)->createResponse();
-            $response->getBody()->write("Success");
-            return $response;
-        };
+        $request = (new ServerRequestFactory())
+            ->createServerRequest('GET', 'https://example.com/api');
 
         $collection = new MiddlewareCollection([
-            new JwtAuthentication([
-                "secret" => "supersecretkeyyoushouldnotcommittogithub",
-                "ignore" => "/api/login",
-            ])
+            new JwtAuthentication(
+                new Options(),
+                $this->decoder,
+                [new RequestPathRule(['/'], ['/api/login'])],
+            ),
         ]);
 
-        $response = $collection->dispatch($request, $default);
-
-        $this->assertEquals(401, $response->getStatusCode());
-        $this->assertEquals("", $response->getBody());
-
-        $request = (new ServerRequestFactory)
-            ->createServerRequest("GET", "https://example.com/api/login");
-
-        $response = $collection->dispatch($request, $default);
-
-        $this->assertEquals(200, $response->getStatusCode());
-        $this->assertEquals("Success", $response->getBody());
+        $this->expectException(AuthorizationException::class);
+        $collection->dispatch($request, $this->defaultclosure());
     }
 
-    public function testShouldBindToMiddleware(): void
+    public function testShouldHandleDefaultPathBug118HappyPath(): void
     {
-        $request = (new ServerRequestFactory)
-            ->createServerRequest("GET", "https://example.com/")
-            ->withHeader("Authorization", "Bearer " . self::$acmeToken);
-
-        $default = function (ServerRequestInterface $request) {
-            $response = (new ResponseFactory)->createResponse();
-            $before = $request->getAttribute("before");
-            $response->getBody()->write($before);
-            return $response;
-        };
+        $request = (new ServerRequestFactory())
+            ->createServerRequest('GET', 'https://example.com/api');
 
         $collection = new MiddlewareCollection([
-            new JwtAuthentication([
-                "secret" => "supersecretkeyyoushouldnotcommittogithub",
-                "before" => function ($request, $arguments) {
-                    $before = get_class($this);
-                    return $request->withAttribute("before", $before);
-                },
-                "after" => function ($response, $arguments) {
-                    $after = get_class($this);
-                    $response->getBody()->write($after);
-                    return $response;
-                }
-
-            ])
+            new JwtAuthentication(
+                new Options(),
+                $this->decoder,
+                [new RequestPathRule(['/'], ['/api/login'])],
+            ),
         ]);
 
-        $response = $collection->dispatch($request, $default);
-        $expected = str_repeat("Tuupola\Middleware\JwtAuthentication", 2);
-        $this->assertEquals(200, $response->getStatusCode());
-        $this->assertEquals($expected, (string) $response->getBody());
-    }
+        $request = (new ServerRequestFactory())
+            ->createServerRequest('GET', 'https://example.com/api/login');
 
-    public function testShouldHandlePsr7(): void
-    {
-        $request = (new ServerRequestFactory)
-            ->createServerRequest("GET", "https://example.com/api")
-            ->withHeader("X-Token", "Bearer " . self::$acmeToken);
+        $response = $collection->dispatch($request, $this->defaultclosure());
 
-        $response = (new ResponseFactory)->createResponse();
-
-        $auth = new JwtAuthentication([
-            "secret" => "supersecretkeyyoushouldnotcommittogithub",
-            "header" => "X-Token"
-        ]);
-
-        $next = function (ServerRequestInterface $request, ResponseInterface $response) {
-            $response->getBody()->write("Success");
-            return $response;
-        };
-
-        $response = $auth($request, $response, $next);
-
-        $this->assertEquals(200, $response->getStatusCode());
-        $this->assertEquals("Success", $response->getBody());
-    }
-
-    public function testShouldHaveUriInErrorHandlerIssue96(): void
-    {
-        $request = (new ServerRequestFactory)
-            ->createServerRequest("GET", "https://example.com/api/foo?bar=pop");
-
-        $dummy = null;
-
-        $default = function (ServerRequestInterface $request) {
-            $response = (new ResponseFactory)->createResponse();
-            $response->getBody()->write("Success");
-            return $response;
-        };
-
-        $collection = new MiddlewareCollection([
-            new JwtAuthentication([
-                "secret" => "supersecretkeyyoushouldnotcommittogithub",
-                "error" => function (ResponseInterface $response, $arguments) use (&$dummy) {
-                    $dummy = $arguments["uri"];
-                }
-            ])
-        ]);
-
-        $response = $collection->dispatch($request, $default);
-
-        $this->assertEquals(401, $response->getStatusCode());
-        $this->assertEquals("", $response->getBody());
-        $this->assertEquals("https://example.com/api/foo?bar=pop", $dummy);
+        self::assertSame(200, $response->getStatusCode());
+        self::assertSame('Success', (string) $response->getBody());
     }
 
     public function testShouldUseCookieIfHeaderMissingIssue156(): void
     {
-        $request = (new ServerRequestFactory)
-            ->createServerRequest("GET", "https://example.com/api")
-            ->withCookieParams(["token" => self::$acmeToken]);
-
-        $default = function (ServerRequestInterface $request) {
-            $response = (new ResponseFactory)->createResponse();
-            $response->getBody()->write("Success");
-            return $response;
-        };
+        $request = (new ServerRequestFactory())
+            ->createServerRequest('GET', 'https://example.com/api')
+            ->withCookieParams(['token' => self::$acmeToken]);
 
         $collection = new MiddlewareCollection([
-            new JwtAuthentication([
-                "secret" => "supersecretkeyyoushouldnotcommittogithub",
-                "header" => "X-Token",
-                "regexp" => "/(.*)/",
-            ])
+            new JwtAuthentication(
+                new Options(header: 'X-Token', regexp: '/(.*)/'),
+                $this->decoder,
+            ),
         ]);
 
-        $response = $collection->dispatch($request, $default);
+        $response = $collection->dispatch($request, $this->defaultclosure());
 
-        $this->assertEquals(200, $response->getStatusCode());
-        $this->assertEquals("Success", $response->getBody());
+        self::assertSame(200, $response->getStatusCode());
+        self::assertSame('Success', (string) $response->getBody());
+    }
+
+    public function testAddRule(): void
+    {
+        $class = $this->middleware->addRule(new RequestPathRule([], ['/foobar']));
+        $collection = new MiddlewareCollection([$class]);
+
+        $request = (new ServerRequestFactory())
+            ->createServerRequest('GET', 'https://example.com/foo');
+
+        $response = $collection->dispatch($request, $this->defaultClosure());
+
+        self::assertSame(200, $response->getStatusCode());
+        self::assertSame('Success', (string) $response->getBody());
+    }
+
+    public function testWithRule(): void
+    {
+        $collection = new MiddlewareCollection([
+            $this->middleware->withRules(new RequestPathRule(['/admin'], ['/admin/ping'])),
+        ]);
+
+        $request = (new ServerRequestFactory())
+            ->createServerRequest('GET', 'https://example.com');
+
+        $response = $collection->dispatch($request, $this->defaultClosure());
+        self::assertSame(200, $response->getStatusCode());
+        self::assertSame('Success', (string) $response->getBody());
+
+        $request = (new ServerRequestFactory())
+            ->createServerRequest('GET', 'https://example.com/admin')
+            ->withHeader('Authorization', 'Bearer ' . self::$acmeToken);
+        $response = $collection->dispatch($request, $this->defaultClosure());
+        self::assertSame(200, $response->getStatusCode());
+        self::assertSame('Success', (string) $response->getBody());
+
+        $request = (new ServerRequestFactory())
+            ->createServerRequest('GET', 'https://example.com/admin/ping');
+        $response = $collection->dispatch($request, $this->defaultClosure());
+        self::assertSame(200, $response->getStatusCode());
+        self::assertSame('Success', (string) $response->getBody());
+    }
+
+    private function beforeHandler(): BeforeHandlerInterface
+    {
+        return new class implements BeforeHandlerInterface {
+            public function __invoke(
+                ServerRequestInterface $request,
+                array $arguments
+            ): ServerRequestInterface {
+                return $request->withParsedBody($arguments)
+                    ->withAttribute('test', 'invoke');
+            }
+        };
+    }
+
+    private function afterHandler(): AfterHandlerInterface
+    {
+        return new class implements AfterHandlerInterface {
+            public function __invoke(ResponseInterface $response, array $arguments): ResponseInterface
+            {
+                $body = $response->getBody();
+                $body->rewind();
+                $body->write(json_encode($arguments, JSON_THROW_ON_ERROR));
+
+                return $response->withHeader('X-Brawndo', 'plants crave');
+            }
+        };
+    }
+
+    private function defaultClosure(): Closure
+    {
+        return static function (ServerRequestInterface $request): ResponseInterface {
+            $response = (new ResponseFactory())->createResponse();
+            $response->getBody()->write('Success');
+
+            return $response;
+        };
     }
 }
