@@ -1,6 +1,6 @@
 ---
 "latest":
-  tag: "main"
+  tag: "1.x"
   languages:
     - "en"
 "2.0":

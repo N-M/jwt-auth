@@ -77,7 +77,7 @@ def meta(current_language: str) -> None:
             html_context["versions"]["tags"].append(
                 {
                     "name": details.get("tag"),
-                    "url": f"/{label}/{current_language}",
+                    "url": f"/jwt-auth/{label}/{current_language}",
                 }
             )
 
