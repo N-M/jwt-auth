@@ -39,7 +39,7 @@ def build_doc(version, language, tag):
 # a move dir method because we run multiple builds and bring the html folders to a
 # location which we then push to github pages
 def move_dir(src, dst):
-  subprocess.run(["mkdir", "-p", dst])
+  subprocess.run(["mkdir", "-p", dst], shell=True)
   subprocess.run("mv "+src+'* ' + dst, shell=True)
 
 if __name__ == '__main__':
