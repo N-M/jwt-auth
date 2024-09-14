@@ -1,3 +1,5 @@
+"""config file for sphinx"""
+
 import os
 import yaml
 
@@ -9,71 +11,75 @@ import yaml
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
-project = 'jwt-auth'
-copyright = '2024, James Read'
-author = 'James Read'
-release = '2.0'
+project = "JWT-Auth"
+copyright = "2024, James Read"
+author = "James Read"
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
 extensions = [
-    'sphinx.ext.githubpages',
-    'sphinx_multiversion',
+    "sphinx.ext.githubpages",
+    "sphinx_multiversion",
 ]
-templates_path = ['_templates']
-exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store', 'bin', 'lib']
-language = 'en'
+templates_path = ["_templates"]
+exclude_patterns = ["_build", "Thumbs.db", ".DS_Store", "bin", "lib", "lib64"]
 
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
-html_theme = 'sphinx_rtd_theme'
-html_static_path = ['_static']
+html_theme = "sphinx_rtd_theme"
+html_static_path = []
 html_baseurl = os.environ.get("pages_root")
 html_sidebars = {
-    '**': ['versions.html'],
+    "**": ["versions.html"],
 }
 
-locale_dirs = ['locale/']   # path is example but recommended.
-gettext_compact = False     # optional.
+locale_dirs = ["locale/"]  # path is example but recommended.
+gettext_compact = False  # optional.
 
-current_language = os.environ.get("current_language", "en")
-current_version = os.environ.get("current_version")
+language = os.environ.get("current_language")
+version = os.environ.get("current_version")
 
 build_all_docs = os.environ.get("build_all_docs")
-pages_root = os.environ.get("pages_root", "")
+pages_root = os.environ.get("pages_root", "/")
 
 html_context = {
-  "current_language": current_language,
-  "languages": [
-     {"name": 'en', "url": current_version+'/'+language},
-  ],
-  "current_version": { "name": current_version },
-  "versions": {
-     "tags": [],
-     "branches": [
-        {"name": "main", "url": pages_root}
-     ]
-  }
+    "current_language": language,
+    "languages": [
+        {"name": language, "url": f"/{version}/{language}"},
+    ],
+    "current_version": {"name": version},
+    "versions": {"tags": [], "branches": [{"name": "main", "url": pages_root}]},
 }
 
-with open("versions.yaml", "r") as yaml_file:
-    docs = yaml.safe_load(yaml_file)
-    for language in docs[current_version].get('languages', []):
-      found = next((item for item in html_context['languages'] if item['name'] == current_language), None)
 
-      if(found is None):
-        html_context['languages'].append({
-          "name": language,
-          "url": current_version+'/'+language,
-        })
+def meta(current_language: str) -> None:
+    """
+    adds meta data to html_context versions
+    """
+    with open("versions.yaml", "r", encoding="UTF-8") as yaml_file:
+        docs = yaml.safe_load(yaml_file)
+        for lang in docs[version].get("languages", []):
+            found = next(
+                (item for item in html_context["languages"] if item["name"] == lang),
+                None,
+            )
+            if found is None:
+                html_context["languages"].append(
+                    {
+                        "name": lang,
+                        "url": f"/{version}/{lang}",
+                    }
+                )
 
-      for version, details in docs.items():
-        if version == "latest":
-           continue
+        for label, details in docs.items():
+            html_context["versions"]["tags"].append(
+                {
+                    "name": details.get("tag"),
+                    "url": f"/{label}/{current_language}",
+                }
+            )
 
-        html_context['versions']['tags'].append({
-           "name": version,
-           "url": version+'/'+current_language,
-        })
+
+meta(language)

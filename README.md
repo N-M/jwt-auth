@@ -10,9 +10,6 @@ which take a JWT from the headers or cookies.
 
 ```php
 <?php
-
-declare(strict_types=1);
-
 use JimTools\JwtAuth\Decoder\FirebaseDecoder;
 use JimTools\JwtAuth\Middleware\JwtAuthentication;
 use JimTools\JwtAuth\Options;
