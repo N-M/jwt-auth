@@ -48,5 +48,8 @@
     },
     "replace": {
         "tuupola/slim-jwt-auth": "*"
+    },
+    "archive": {
+      "exclude": ["docs", "CHANGELOG.md", "CONTRIBUTING.md", "UPGRADING.md"]
     }
 }
