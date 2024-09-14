@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace JimTools\JwtAuth\Decoder;
 
-use JimTools\JwtAuth\Exceptions\DomainException;
-use JimTools\JwtAuth\Exceptions\InvalidArgumentException;
 use JimTools\JwtAuth\Exceptions\BeforeValidException;
+use JimTools\JwtAuth\Exceptions\DomainException;
 use JimTools\JwtAuth\Exceptions\ExpiredException;
+use JimTools\JwtAuth\Exceptions\InvalidArgumentException;
 use JimTools\JwtAuth\Exceptions\SignatureInvalidException;
 use JimTools\JwtAuth\Exceptions\UnexpectedValueException;
 

@@ -676,7 +676,7 @@ final class JwtAuthenticationTest extends TestCase
 
     private function beforeHandler(): BeforeHandlerInterface
     {
-        return new class() implements BeforeHandlerInterface {
+        return new class implements BeforeHandlerInterface {
             public function __invoke(
                 ServerRequestInterface $request,
                 array $arguments
@@ -689,7 +689,7 @@ final class JwtAuthenticationTest extends TestCase
 
     private function afterHandler(): AfterHandlerInterface
     {
-        return new class() implements AfterHandlerInterface {
+        return new class implements AfterHandlerInterface {
             public function __invoke(ResponseInterface $response, array $arguments): ResponseInterface
             {
                 $body = $response->getBody();

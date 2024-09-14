@@ -20,6 +20,7 @@ use Throwable;
 use Tuupola\Middleware\DoublePassTrait;
 
 use function in_array;
+use function sprintf;
 
 final class JwtAuthentication implements MiddlewareInterface
 {

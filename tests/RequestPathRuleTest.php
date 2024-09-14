@@ -127,7 +127,7 @@ final class RequestPathRuleTest extends TestCase
         );
 
         // Should authenticate
-        $rule = new RequestPathRule(['/api/products/(\\d*)/tickets']);
+        $rule = new RequestPathRule(['/api/products/(\d*)/tickets']);
         self::assertTrue($rule($request));
 
         // Should not authenticate

@@ -5,20 +5,20 @@ declare(strict_types=1);
 namespace JimTools\JwtAuth\Decoder;
 
 use DomainException as BaseDomainException;
-use JimTools\JwtAuth\Exceptions\DomainException;
 use Firebase\JWT\BeforeValidException as JwtBeforeValidException;
 use Firebase\JWT\ExpiredException as JwtExpiredException;
 use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
 use Firebase\JWT\SignatureInvalidException as JwtSignatureInvalidException;
 use InvalidArgumentException as BaseInvalidArgumentException;
-use JimTools\JwtAuth\Exceptions\InvalidArgumentException;
 use JimTools\JwtAuth\Exceptions\BeforeValidException;
+use JimTools\JwtAuth\Exceptions\DomainException;
 use JimTools\JwtAuth\Exceptions\ExpiredException;
+use JimTools\JwtAuth\Exceptions\InvalidArgumentException;
 use JimTools\JwtAuth\Exceptions\SignatureInvalidException;
+use JimTools\JwtAuth\Exceptions\UnexpectedValueException;
 use JimTools\JwtAuth\Secret;
 use UnexpectedValueException as BaseUnexpectedValueException;
-use JimTools\JwtAuth\Exceptions\UnexpectedValueException;
 
 use function count;
 

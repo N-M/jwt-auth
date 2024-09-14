@@ -130,7 +130,7 @@ final class JwtAuthUpgradeRector extends AbstractRector
     }
 
     /**
-     * @return array{0:Arg[],1:Arg[],2:Array_|null}
+     * @return array{0:Arg[],1:Arg[],2:null|Array_}
      */
     private function extractArgs(Array_ $options): array
     {
