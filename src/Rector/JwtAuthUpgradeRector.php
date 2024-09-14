@@ -115,6 +115,9 @@ final class JwtAuthUpgradeRector extends AbstractRector
     }
 
     /**
+     * @param Arg[] $optionArgs
+     * @param Arg[] $decoderArgs
+     *
      * @return Arg[]
      */
     private function replaceArgs(array $optionArgs, array $decoderArgs, ?Array_ $rules): array
@@ -159,7 +162,7 @@ final class JwtAuthUpgradeRector extends AbstractRector
                     $paths = $val;
                 }
 
-                if ($key === 'ignore') {
+                if ($key === 'ignore' && $val instanceof Array_) {
                     $ignore = $val;
                 }
 
@@ -219,7 +222,7 @@ final class JwtAuthUpgradeRector extends AbstractRector
             $optionArgs[] = new Arg($val, name: new Identifier($mappedKey));
         }
 
-        if ($rules === null) {
+        if ($rules === null && $paths instanceof Array_) {
             $rules = $this->createRules($paths, $ignore);
         }
 
@@ -365,6 +368,9 @@ final class JwtAuthUpgradeRector extends AbstractRector
     }
 
     /**
+     * @param array<array-key,Expr> $secrets
+     * @param array<array-key,Expr> $algorithms
+     *
      * @return array<array-key,Arg>
      */
     private function createDecoderArgs(array $secrets, array $algorithms): array
