@@ -4,9 +4,7 @@ declare(strict_types=1);
 
 namespace JimTools\JwtAuth\Exceptions;
 
-use RuntimeException;
-
-final class AuthorizationException extends RuntimeException
+class AuthorizationException
 {
     /**
      * @codeCoverageIgnore

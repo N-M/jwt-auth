@@ -92,6 +92,10 @@ final class JwtAuthUpgradeRector extends AbstractRector
             }
 
             $options = $node->getArgs()[0];
+            if (!$options->value instanceof Array_) {
+                throw new RuntimeException('Can only parse options which are arrays');
+            }
+
             [$optionArgs, $decoderArgs, $rules] = $this->extractArgs($options->value);
             $args = $this->replaceArgs($optionArgs, $decoderArgs, $rules);
             $node->args = $args;
