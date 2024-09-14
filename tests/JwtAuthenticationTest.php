@@ -589,31 +589,6 @@ final class JwtAuthenticationTest extends TestCase
         self::assertSame('Success', (string) $response->getBody());
     }
 
-    public function testShouldHandlePsr7(): void
-    {
-        $request = (new ServerRequestFactory())
-            ->createServerRequest('GET', 'https://example.com/api')
-            ->withHeader('X-Token', 'Bearer ' . self::$acmeToken);
-
-        $response = (new ResponseFactory())->createResponse();
-
-        $auth = new JwtAuthentication(
-            new Options(header: 'X-Token'),
-            $this->decoder
-        );
-
-        $next = static function (ServerRequestInterface $request, ResponseInterface $response) {
-            $response->getBody()->write('Success');
-
-            return $response;
-        };
-
-        $response = $auth($request, $response, $next);
-
-        self::assertSame(200, $response->getStatusCode());
-        self::assertSame('Success', (string) $response->getBody());
-    }
-
     public function testShouldUseCookieIfHeaderMissingIssue156(): void
     {
         $request = (new ServerRequestFactory())

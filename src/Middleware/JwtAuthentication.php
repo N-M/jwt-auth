@@ -17,15 +17,12 @@ use Psr\Http\Server\RequestHandlerInterface;
 use RuntimeException;
 use SplStack;
 use Throwable;
-use Tuupola\Middleware\DoublePassTrait;
 
 use function in_array;
 use function sprintf;
 
 final class JwtAuthentication implements MiddlewareInterface
 {
-    use DoublePassTrait;
-
     /**
      * The rules stack.
      *

@@ -5,6 +5,7 @@ notible changes but it's not extencive.
 
 - Minimum PHP 8.1+
 - Namespace changed
+- Dropped support for PSR-7 (double pass)
 - Options moved into class
 - Secrets moved into class
 - Logger removed
