@@ -9,9 +9,9 @@ This package is a PSR-15 compliant JSON Web Token authentication middleware,
 which take a JWT from the headers or cookies.
 
 ```php
-<?php
 use JimTools\JwtAuth\Decoder\FirebaseDecoder;
 use JimTools\JwtAuth\Middleware\JwtAuthentication;
+use JimTools\JwtAuth\Exceptions\AuthorizationException;
 use JimTools\JwtAuth\Options;
 use JimTools\JwtAuth\Secret;
 use Psr\Http\Message\ResponseInterface as Response;
@@ -21,6 +21,8 @@ use Slim\Factory\AppFactory;
 require './vendor/autoload.php';
 
 $app = AppFactory::create();
+$app->addErrorMiddleware(false, false, false)
+    ->setErrorHandler(AuthorizationException::class, new MyErrorHandler());
 
 $middleware = new JwtAuthentication(
     new Options(),
@@ -40,6 +42,7 @@ $app->run();
 > see [1.x](https://github.com/JimTools/jwt-auth/blob/1.x/README.md)
 
 ## Install
+
 The recommended way to install packages is through
 [composer](https://getcomposer.org/).
 
