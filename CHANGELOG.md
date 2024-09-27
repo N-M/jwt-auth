@@ -3,7 +3,7 @@
 All notable changes to this project will be documented in this file, in reverse
 chronological order by release.
 
-## [2.0](https://github.com/jimtools/jwt-auth/compare/1.0.0...2.0.0) - 2024-09-15
+## [2.0](https://github.com/jimtools/jwt-auth/compare/1.0.0...2.0.0) - 2024-09-27
 
 ### Changed
 2.0 released major rework of the package works, see [UPGRADING](UPGRADING)
