@@ -3,7 +3,6 @@
 /.github/               export-ignore
 .gitignore              export-ignore
 .php-cs-fixer.dist.php  export-ignore
-.phplint.yml            export-ignore
 codecov.yml             export-ignore
 Makefile                export-ignore
 phpstan-baseline.neon   export-ignore

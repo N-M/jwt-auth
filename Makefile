@@ -16,14 +16,13 @@ vendor: $(wildcard composer.lock)
 	composer install --prefer-dist
 
 lint: vendor
-	vendor/bin/phplint
 	vendor/bin/php-cs-fixer fix --dry-run
 
 unit: vendor
 	XDEBUG_MODE=coverage vendor/bin/phpunit --display-warnings
 
 static: vendor
-	vendor/bin/phpstan
+	vendor/bin/phpstan --error-format=github
 
 watch: vendor
 	find . -name "*.php" -not -path "./vendor/*" -o -name "*.json" -not -path "./vendor/*" | entr -c make test
